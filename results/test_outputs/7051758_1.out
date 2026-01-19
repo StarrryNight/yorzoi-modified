@@ -1,0 +1,8 @@
+	Setting up train GenomicDataset
+		Done.
+	Setting up val GenomicDataset
+		Done.
+	Setting up test GenomicDataset
+		Done.
+resolution: 10
+Model parameters dtype: torch.float32
