@@ -12,9 +12,16 @@ for index, row in c.iterrows():
         temp = pd.concat([dic.get(row['chr']), c.loc[[index]]], ignore_index=True)
         dic.update({row['chr']: temp})
 file_path = "categorized"
+
+with open(f"category_names.txt",'a') as file:
+    count = 0
+    for key,value in dic.items():
+        file.write(f"{count} \"{key}\"\n")
+
+'''
 for key,value in dic.items():
     with open(f"{file_path}/{key}.pkl", 'wb') as file:
         pickle.dump(value, file)
-
+'''
 
 
