@@ -1,0 +1,108 @@
+_wandb:
+    value:
+        cli_version: 0.21.2
+        e:
+            meif0y1mwabfopvll8jfinfbymf8iw6d:
+                codePath: train_yeast.py
+                codePathLocal: train_yeast.py
+                cpu_count: 112
+                cpu_count_logical: 112
+                cudaVersion: "13.0"
+                disk:
+                    /:
+                        total: "432834084864"
+                        used: "1268097024"
+                email: lausingsamuel@gmail.com
+                executable: /home/samuel06/venv/bin/python3
+                git:
+                    commit: 8d7f3f1524b38a6491d1942e39745eef74f1eccb
+                    remote: https://github.com/StarrryNight/yorzoi-modified.git
+                gpu: NVIDIA H100 80GB HBM3
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Hopper
+                      memoryTotal: "85520809984"
+                      name: NVIDIA H100 80GB HBM3
+                      uuid: GPU-fb834d37-e0e4-a9d2-a114-b4abce3e14f7
+                host: g1.nibi.sharcnet
+                memory:
+                    total: "2164170407936"
+                os: Linux-5.14.0-570.44.1.el9_6.x86_64-x86_64-INTEL-R-_XEON-R-_PLATINUM_8570-with-glibc2.37
+                program: /scratch/samuel06/yorzoi/train_yeast.py
+                python: CPython 3.11.5
+                root: /scratch/samuel06/yorzoi
+                slurm:
+                    array_job_id: "7202918"
+                    array_task_count: "1"
+                    array_task_id: "1"
+                    array_task_max: "1"
+                    array_task_min: "1"
+                    array_task_step: "1"
+                    cluster_name: nibi
+                    conf: /opt/software/slurm/24.11.7/etc/slurm.conf
+                    cpus_on_node: "1"
+                    cpus_per_task: "1"
+                    gpus_on_node: "1"
+                    gtids: "0"
+                    home: /opt/software/slurm/current
+                    job_account: def-cdeboer_gpu
+                    job_cpus_per_node: "1"
+                    job_end_time: "1768957743"
+                    job_gid: "3155611"
+                    job_gpus: "3"
+                    job_id: "7202918"
+                    job_name: yorzoi_train
+                    job_nodelist: g1
+                    job_num_nodes: "1"
+                    job_partition: gpubackfill
+                    job_qos: normal
+                    job_start_time: "1768946943"
+                    job_uid: "3155611"
+                    job_user: samuel06
+                    jobid: "7202918"
+                    localid: "0"
+                    mem_per_node: "32768"
+                    mpi_type: pmix
+                    nnodes: "1"
+                    nodeid: "0"
+                    nodelist: g1
+                    nprocs: "1"
+                    ntasks: "1"
+                    oom_kill_step: "0"
+                    prio_process: "0"
+                    procid: "0"
+                    profile: None
+                    restart_count: "0"
+                    script_context: prolog_task
+                    submit_dir: /scratch/samuel06/yorzoi
+                    submit_host: l1.nibi.sharcnet
+                    task_pid: "716767"
+                    tasks_per_node: "1"
+                    tmpdir: /local/scratch/samuel06.7202918.0
+                    topology_addr: top.gswitch.g1
+                    topology_addr_pattern: switch.switch.node
+                    tres_per_task: cpu=1
+                startedAt: "2026-01-20T22:09:15.917964Z"
+                writerId: meif0y1mwabfopvll8jfinfbymf8iw6d
+        m: []
+        python_version: 3.11.5
+        t:
+            "1":
+                - 1
+                - 11
+                - 49
+            "2":
+                - 1
+                - 11
+                - 49
+            "3":
+                - 16
+            "4": 3.11.5
+            "5": 0.21.2
+            "6": 4.57.6
+            "12": 0.21.2
+            "13": linux-x86_64
+epochs:
+    value: 80
+lr:
+    value: 6e-05

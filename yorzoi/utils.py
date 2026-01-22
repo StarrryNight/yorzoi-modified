@@ -97,7 +97,10 @@ def batch_one_hot_decode(sequences: torch.tensor):
     Args:
         sequences (torch.tensor): Batch of one-hot encoded sequences.
                                  Expected shape: [batch_size, sequence_length, 4]
-                                 or [batch_size, 4, sequence_length]
+        confi = TrainConfig.read_from_json("train_config.json")
+train, val, test = create_datasets(confi)
+train_d, val_d, test_d = create_dataloaders(confi, train, val, test)
+md = Borzoi(BorzoiConfig.read_from_json(confi.borzoi_cfg))                         or [batch_size, 4, sequence_length]
 
     Returns:
         list: List of decoded nucleotide sequences as strings

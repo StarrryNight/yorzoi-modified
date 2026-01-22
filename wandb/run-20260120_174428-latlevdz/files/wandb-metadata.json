@@ -1,0 +1,91 @@
+{
+  "os": "Linux-5.14.0-570.44.1.el9_6.x86_64-x86_64-INTEL-R-_XEON-R-_PLATINUM_8570-with-glibc2.37",
+  "python": "CPython 3.11.5",
+  "startedAt": "2026-01-20T22:44:28.120348Z",
+  "program": "/scratch/samuel06/yorzoi/train_yeast.py",
+  "codePath": "train_yeast.py",
+  "codePathLocal": "train_yeast.py",
+  "git": {
+    "remote": "https://github.com/StarrryNight/yorzoi-modified.git",
+    "commit": "8d7f3f1524b38a6491d1942e39745eef74f1eccb"
+  },
+  "email": "lausingsamuel@gmail.com",
+  "root": "/scratch/samuel06/yorzoi",
+  "host": "g2.nibi.sharcnet",
+  "executable": "/home/samuel06/venv/bin/python3",
+  "cpu_count": 112,
+  "cpu_count_logical": 112,
+  "gpu": "NVIDIA H100 80GB HBM3",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "432833609728",
+      "used": "1281187840"
+    }
+  },
+  "memory": {
+    "total": "2164168040448"
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA H100 80GB HBM3",
+      "memoryTotal": "85520809984",
+      "architecture": "Hopper",
+      "uuid": "GPU-7ab3fca3-53de-1a4d-3760-a2289065f9ed"
+    }
+  ],
+  "cudaVersion": "13.0",
+  "slurm": {
+    "array_job_id": "7203260",
+    "array_task_count": "1",
+    "array_task_id": "1",
+    "array_task_max": "1",
+    "array_task_min": "1",
+    "array_task_step": "1",
+    "cluster_name": "nibi",
+    "conf": "/opt/software/slurm/24.11.7/etc/slurm.conf",
+    "cpus_on_node": "1",
+    "cpus_per_task": "1",
+    "gpus_on_node": "1",
+    "gtids": "0",
+    "home": "/opt/software/slurm/current",
+    "job_account": "def-cdeboer_gpu",
+    "job_cpus_per_node": "1",
+    "job_end_time": "1768959838",
+    "job_gid": "3155611",
+    "job_gpus": "40",
+    "job_id": "7203260",
+    "job_name": "yorzoi_train",
+    "job_nodelist": "g2",
+    "job_num_nodes": "1",
+    "job_partition": "gpubackfill",
+    "job_qos": "normal",
+    "job_start_time": "1768949038",
+    "job_uid": "3155611",
+    "job_user": "samuel06",
+    "jobid": "7203260",
+    "localid": "0",
+    "mem_per_node": "32768",
+    "mpi_type": "pmix",
+    "nnodes": "1",
+    "nodeid": "0",
+    "nodelist": "g2",
+    "nprocs": "1",
+    "ntasks": "1",
+    "oom_kill_step": "0",
+    "prio_process": "0",
+    "procid": "0",
+    "profile": "None",
+    "restart_count": "0",
+    "script_context": "prolog_task",
+    "submit_dir": "/scratch/samuel06/yorzoi",
+    "submit_host": "l1.nibi.sharcnet",
+    "task_pid": "2164040",
+    "tasks_per_node": "1",
+    "tmpdir": "/local/scratch/samuel06.7203260.0",
+    "topology_addr": "top.gswitch.g2",
+    "topology_addr_pattern": "switch.switch.node",
+    "tres_per_task": "cpu=1"
+  },
+  "writerId": "svlqoxcrthm7dwtvo1dn075patf10mns"
+}

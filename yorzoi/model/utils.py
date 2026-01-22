@@ -22,6 +22,28 @@
 # =========================================================================
 
 import torch.nn as nn
+import matplotlib.pyplot as plt
+
+def plot_coverage(pred_tensor, actual_tensor, pred_name, actual_name, save_path="coverage_plot.png"):
+    # Plot predicted and actual coverage values on the same graph
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    print("Hi")
+    # Plot predicted coverage
+    ax.plot(pred_tensor.detach().cpu().numpy(), label=f'Predicted - {pred_name}', color='blue')
+    # Plot actual coverage
+    ax.plot(actual_tensor.detach().cpu().numpy(), label=f'Actual - {actual_name}', color='red')
+    ax.set_title('Predicted vs Actual Coverage')
+    ax.set_xlabel('Position (bp)')
+    ax.set_ylabel('Coverage')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.show()
+
 
 
 class Residual(nn.Module):

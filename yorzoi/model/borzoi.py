@@ -308,6 +308,7 @@ class Borzoi(PreTrainedModel):
         x += x_unet1
         x = self.separable1(x)
         x = self.upsampling_unet0(x)
+        x_unet0 = x_unet0[:, :, : x.shape[2]]
         x += x_unet0
         x = self.separable0(x)
         x = self.crop(x.permute(0, 2, 1))
@@ -315,7 +316,7 @@ class Borzoi(PreTrainedModel):
 
     def predict(self, seqs, gene_slices, remove_squashed_scale=False):
         """
-        Predicts only for bins of interest in a batched fashion
+        Predicts only for bins of interest in a bathed fashion
         Args:
             seqs (torch.tensor): Nx4xL tensor of one-hot sequences
             gene_slices List[torch.Tensor]: tensors indicating bins of interest
@@ -340,7 +341,7 @@ class Borzoi(PreTrainedModel):
         seq_embs = seq_embs[:, :, slice_list]
         # Run the model head
         seq_embs = self.final_joined_convs(seq_embs)
-        with torch.cuda.amp.autocast(enabled=False):
+        with torch.amp.autocast('cuda', enabled=False):
             conved_slices = self.final_softplus(self.human_head(seq_embs.float()))
         if remove_squashed_scale:
             conved_slices = undo_squashed_scale(conved_slices)
@@ -361,7 +362,7 @@ class Borzoi(PreTrainedModel):
         x = self.get_embs_after_crop(x)
         x = self.final_joined_convs(x)
         # disable autocast for more precision in final layer
-        with torch.cuda.amp.autocast(enabled=False):
+        with torch.amp.autocast('cuda', enabled=False):
             if data_parallel_training:
                 # we need this to get gradients for both heads if doing DDP training
                 if is_human:

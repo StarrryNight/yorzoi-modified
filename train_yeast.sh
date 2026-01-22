@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=yorzoi_train
 #SBATCH --account=def-cdeboer
-#SBATCH --time=15:00:00         
+#SBATCH --time=03:00:00         
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

@@ -123,7 +123,7 @@ def train_model(
     finetune_lr_factor: float = 0.1,
     run_config=None,
 ):
-    optimizer = torch.optim.adamw(lr=0.00006,weight_decay=0.0000001)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=0.00006,weight_decay=0.0000001)
     model.to(device)
 
     train_losses = []
@@ -158,11 +158,8 @@ def train_model(
             optimizer.zero_grad()
 
             # Forward pass
-            if epoch == 0 and i == 0:
-                visualize_input(sequences)
-
             if run_config.borzoi_cfg["flashed"]:
-                with torch.autocast(device_type="cuda"):
+                with torch.amp.autocast('cuda', dtype=torch.bfloat16):
                     outputs = model(sequences)
                     outputs = outputs.squeeze(
                         1
@@ -185,8 +182,8 @@ def train_model(
             optimizer.step()
 
             total_loss += loss.item()
-            total_multinomial_loss += multinomial_term.item()
-            total_poisson_loss += poisson_term.item()
+            total_multinomial_loss += multinomial_term.sum().item()
+            total_poisson_loss += poisson_term.sum().item()
 
             # Print progress
             if (i + 1) % 100 == 0:
@@ -218,7 +215,7 @@ def train_model(
         val_multinomial_loss = 0
         with torch.no_grad():
             if run_config.borzoi_cfg["flashed"]:
-                with torch.autocast(device_type="cuda"):
+                with torch.amp.autocast('cuda', dtype=torch.bfloat16):
                     for i, batch in enumerate(val_loader):
                         sequences, targets = batch[0], batch[1]
 
@@ -236,8 +233,8 @@ def train_model(
                             outputs, targets
                         )
                         val_loss += loss.item()
-                        val_multinomial_loss += multinomial_term.item()
-                        val_poisson_loss += poisson_term.item()
+                        val_multinomial_loss += multinomial_term.sum().item()
+                        val_poisson_loss += poisson_term.sum().item()
             else:
                 for i, batch in enumerate(val_loader):
                     sequences, targets = batch[0], batch[1]
@@ -255,8 +252,8 @@ def train_model(
                         outputs, targets
                     )
                     val_loss += loss.item()
-                    val_multinomial_loss += multinomial_term.item()
-                    val_poisson_loss += poisson_term.item()
+                    val_multinomial_loss += multinomial_term.sum().item()
+                    val_poisson_loss += poisson_term.sum().item()
 
         avg_val_loss = val_loss / len(val_loader)
         avg_val_poisson_loss = val_poisson_loss / len(val_loader)
@@ -355,8 +352,7 @@ def train_model(
                 break
 
     wandb.save(json.dumps(run_config.__dict__))
-
-
+import yorzoi.model.utils as u
 def test_model(
     base_folder: str,
     test_loader: DataLoader,
@@ -364,35 +360,55 @@ def test_model(
     criterion,
     device="cuda:2",
 ):
-    os.makedirs(f"{base_folder}/evaluations")
     print("\n=== MODEL EVALUATION ===")
-
+    criterion = poisson_multinomial
+    model.eval()
     with torch.no_grad():
-        # with torch.autocast(device_type="cuda"):
-        test_loss = 0
-        for i, batch in enumerate(test_loader):
-            sequences, targets = batch[0], batch[1]
+        with torch.amp.autocast('cuda', dtype=torch.bfloat16):
+            test_loss = 0
+            for i, batch in enumerate(test_loader):
+                sequences, targets = batch[0], batch[1]
 
-            if i % 10 == 0:
-                print(f"\t[Batch {i}/{len(test_loader)}]")
+                if i % 10 == 0:
+                    print(f"\t[Batch {i}/{len(test_loader)}]")
 
-            sequences = sequences.to(device)
-            targets = targets.to(device)
+                sequences = sequences.to(device)
+                targets = targets.to(device)
 
-            outputs = model(sequences)
-            outputs = outputs.squeeze(1)  # TODO uglyy
-            loss, _, _, _ = criterion(outputs, targets)
-            test_loss += loss.item()
+                outputs = model(sequences)
+                outputs = outputs.squeeze(1)  # TODO uglyy
+                loss, _, _, _ = criterion(outputs, targets)
+                test_loss += loss.item()
+
+                pred = outputs[0, 0, :]
+                actual = targets[0, 0, :]
+                u.plot_coverage(pred, actual, "Predicted", "Actual", f"{base_folder}/evaluations/pred_vs_actual_track_{i}.png")
 
     print(f"\tMean batch loss: {test_loss / len(test_loader)}")
 
     test_loss /= len(test_loader)
 
-    print(f"\Batch-wise Mean Test Loss: {test_loss:.4f}")
-
     # Save the test loss in json
     with open(f"{base_folder}/evaluations/test_loss.json", "w") as f:
-        f.write(json.dumps({"test_loss": test_loss}))
+        json.dump({"test_loss": test_loss}, f)
+
+    # Plot predicted vs actual for the last batch, first track
+    if len(test_loader) > 0:
+        # Get the last batch
+        last_batch = None
+        for batch in test_loader:
+            last_batch = batch
+        if last_batch is not None:
+            sequences, targets = last_batch[0], last_batch[1]
+            sequences = sequences.to(device)
+            targets = targets.to(device)
+            with torch.amp.autocast('cuda', dtype=torch.bfloat16):
+                outputs = model(sequences)
+            outputs = outputs.squeeze(1)
+            # Plot for track 0
+            pred = outputs[0, 0, :]
+            actual = targets[0, 0, :]
+            u.plot_coverage(pred, actual, "Predicted", "Actual", f"{base_folder}/evaluations/pred_vs_actual_track_0.png")
 
 
 def main(cfg_path: str, device: str, model_name: str, run_id: str):

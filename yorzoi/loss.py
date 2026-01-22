@@ -8,7 +8,7 @@ def poisson_multinomial(
     poisson_weight: float = 1,
     epsilon: float = 1e-7,
     rescale: bool = False,
-    reduction: str = "sum",
+    reduction: str = "mean",
     resolution: int = 10,
 ):
     """Poisson decomposition with multinomial specificity term.
@@ -24,7 +24,6 @@ def poisson_multinomial(
     if torch.isnan(y_pred).any():
         print("NaN detected in model output")
         raise ValueError("NaN in model output")
-
     # Create mask for valid tracks (no negative values)
     valid_track_mask = ~torch.all(y_true == -resolution, dim=-1)  # Shape: bs x tracks
 
@@ -32,6 +31,7 @@ def poisson_multinomial(
     s_true = y_true.sum(dim=-1, keepdim=True) + epsilon  # Shape: (bs, tracks, 1)
     s_pred = y_pred.sum(dim=-1, keepdim=True) + epsilon  # Shape: (bs, tracks, 1)
 
+    print(min(s_true.flatten()), min(s_pred.flatten()))
     # Poisson term (on all data, we'll mask later)
     poisson_term = F.poisson_nll_loss(
         s_pred.squeeze(-1), s_true.squeeze(-1), reduction="none", log_input=False
@@ -42,11 +42,12 @@ def poisson_multinomial(
     multinomial_term = -torch.sum(
         y_true * torch.log(p_pred + epsilon), dim=-1
     )  # Shape: (bs, tracks)
+    print(max(multinomial_term.flatten()), max(poisson_term.flatten()))
 
     # Apply mask to both terms - zeroing out invalid tracks
     multinomial_term = multinomial_term * valid_track_mask
     poisson_term = poisson_term * valid_track_mask
-
+    print(multinomial_term.shape, poisson_term.shape, valid_track_mask.shape)
     # Combine terms
     loss_raw = multinomial_term + poisson_weight * poisson_term
 
