@@ -21,9 +21,8 @@ md.eval()
 
 
 # Iterate through category names and predict each 
-for index,row in profiles.itertuples():
-    path = row["path"]
-    confi.path_to_samples = path
+for index, path in profiles.itertuples():
+    confi.path_to_samples = f"categorized/{path}.pkl"
     train, val, test = create_datasets(confi)
     train_d, val_d, test_d = create_dataloaders(confi, train, val, test)
     test_model(

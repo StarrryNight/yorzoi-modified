@@ -24,7 +24,8 @@ class GenomicDataset(Dataset):
 
         self.mean_track_values, self.std_track_values = 0.0, 0.0
         n_seen = 0
-        for p in self.samples["track_values"].sample(100):
+        sample_length = len(samples) if len(samples)>100 else len(samples)
+        for p in self.samples["track_values"].sample(sample_length):
             arr = np.load(p)["a"]
             subset = arr.flat[:: max(1, arr.size // 10_000)]
             self.mean_track_values += subset.mean()

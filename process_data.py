@@ -14,7 +14,6 @@ for index, row in c.iterrows():
 file_path = "categorized"
 
 with open(f"category_names.txt",'a') as file:
-    file.write("path\n")
     for key,value in dic.items():
         file.write(f"\"{key}\"\n")
 
