@@ -21,20 +21,27 @@ md.eval()
 
 
 # Iterate through category names and predict each 
-
 os.makedirs(f"evaluations", exist_ok=True)
 for index, path in profiles.itertuples():
     confi.path_to_samples = f"categorized/{path}.pkl"
     train, val, test = create_datasets(confi)
+    if (len(test.samples)==0):
+        with open ("analysis.txt",'a') as file:
+            file.write(path)
+            file.write("\n")
+            file.write("No test samples in this profile")
+            file.write("\n")
+            file.write("\n")
+        continue
     train_d, val_d, test_d = create_dataloaders(confi, train, val, test)
     metric = test_model(
         base_folder=f"evaluations/{path}" ,test_loader=test_d,model=md,criterion=None,device="cuda:0")
-    pearsonr = round(metric.get("pearson"),3)
-    spearmanr = round(metric.get("spearman"),3)
+    pearsonr = metric.get("pearson")
+    spearmanr = metric.get("spearman")
     with open ("analysis.txt",'a') as file:
         file.write(path)
         file.write("\n")
-        file.write(f"pearson r: {pearsonr}")
+        file.write(f"pearson r: {pearsonr,3}")
         file.write("         ")
         file.write(f"spearman r: {spearmanr}")
         file.write("\n")

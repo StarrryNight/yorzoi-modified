@@ -389,11 +389,11 @@ def test_model(
                 actual = targets[0, 0, :].cpu()
                 u.plot_coverage(pred, actual, "Predicted", "Actual", f"{base_folder}/evaluations/pred_vs_actual_track_{i}.png")
                 pearson_sum += pearsonr(pred, actual).statistic
-                spearman_sum += spearmanr(pred,actual)
-    batch_count = 1 if batch_count == 0 else batch_count
+                spearman_sum += spearmanr(pred,actual).statistic
+    batch_count = 1 if batch_count==0 else batch_count
     return {
-        "pearson": pearson_sum/batch_count,
-        "spearman": spearman_sum/batch_count
+        "pearson": round(float(pearson_sum/batch_count), 3),
+        "spearman": round(float(spearman_sum/batch_count), 3)
     }
 
     print(f"\tMean batch loss: {test_loss / len(test_loader)}")
