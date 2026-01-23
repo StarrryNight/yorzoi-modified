@@ -33,6 +33,7 @@ import pandas as pd
 # torch.set_float32_matmul_precision('high')
 
 
+#So turns on the resolution config doesnt matter......
 class ConvDna(nn.Module):
     def __init__(self, out_channels, resolution):
         super(ConvDna, self).__init__()
