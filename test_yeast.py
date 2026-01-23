@@ -41,7 +41,7 @@ for index, path in profiles.itertuples():
     with open ("analysis.txt",'a') as file:
         file.write(path)
         file.write("\n")
-        file.write(f"pearson r: {pearsonr,3}")
+        file.write(f"pearson r: {pearsonr}")
         file.write("         ")
         file.write(f"spearman r: {spearmanr}")
         file.write("\n")
