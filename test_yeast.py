@@ -22,11 +22,12 @@ md.eval()
 
 # Iterate through category names and predict each 
 for index,row in profiles.itertuples():
-    confi.path_to_samples = row["path"]
+    path = row["path"]
+    confi.path_to_samples = path
     train, val, test = create_datasets(confi)
     train_d, val_d, test_d = create_dataloaders(confi, train, val, test)
     test_model(
-        base_folder=f"evaluations/{row["path"]}" ,test_loader=test_d,model=md,criterion=None,device="cuda:0")
+        base_folder=f"evaluations/{path}" ,test_loader=test_d,model=md,criterion=None,device="cuda:0")
     break
 
 

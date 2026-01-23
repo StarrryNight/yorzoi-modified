@@ -7,3 +7,5 @@ torch>=2.1.0
 wandb
 transformers>=4.34.1
 numpy>=1.14.2
+triton
+flash_attn
