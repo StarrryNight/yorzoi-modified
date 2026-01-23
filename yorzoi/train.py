@@ -27,7 +27,7 @@ from yorzoi.loss import poisson_multinomial
 from yorzoi.model.baseline import DNAConvNet
 from yorzoi.config import BorzoiConfig, TrainConfig
 from yorzoi.train_utils.data import create_datasets, create_dataloaders
-
+from scipy.stats import pearsonr, spearmanr
 
 # Helper ---------------------------------------------------------------------
 
@@ -364,10 +364,14 @@ def test_model(
     os.makedirs(f"{base_folder}/evaluations", exist_ok=True)
     criterion = poisson_multinomial
     model.eval()
+    pearson_sum = 0
+    spearman_sum = 0
+    batch_count =0 
     with torch.no_grad():
         with torch.amp.autocast('cuda', dtype=torch.bfloat16):
             test_loss = 0
             for i, batch in enumerate(test_loader):
+                batch_count+=1
                 sequences, targets = batch[0], batch[1]
 
                 if i % 10 == 0:
@@ -381,9 +385,16 @@ def test_model(
                 loss, _, _, _ = criterion(outputs, targets)
                 test_loss += loss.item()
 
-                pred = outputs[0, 0, :]
-                actual = targets[0, 0, :]
+                pred = outputs[0, 0, :].cpu()
+                actual = targets[0, 0, :].cpu()
                 u.plot_coverage(pred, actual, "Predicted", "Actual", f"{base_folder}/evaluations/pred_vs_actual_track_{i}.png")
+                pearson_sum += pearsonr(pred, actual).statistic
+                spearman_sum += spearmanr(pred,actual)
+    batch_count = 1 if batch_count == 0 else batch_count
+    return {
+        "pearson": pearson_sum/batch_count,
+        "spearman": spearman_sum/batch_count
+    }
 
     print(f"\tMean batch loss: {test_loss / len(test_loader)}")
 
@@ -410,7 +421,7 @@ def test_model(
             pred = outputs[0, 0, :]
             actual = targets[0, 0, :]
             u.plot_coverage(pred, actual, "Predicted", "Actual", f"{base_folder}/evaluations/pred_vs_actual_track_0.png")
-
+    
 
 def main(cfg_path: str, device: str, model_name: str, run_id: str):
     import os
