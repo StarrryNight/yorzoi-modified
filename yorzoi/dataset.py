@@ -31,8 +31,9 @@ class GenomicDataset(Dataset):
             self.mean_track_values += subset.mean()
             self.std_track_values += subset.std()
             n_seen += 1
-        self.mean_track_values /= n_seen
-        self.std_track_values /= n_seen
+        if (n_seen>0):
+            self.mean_track_values /= n_seen
+            self.std_track_values /= n_seen
 
         # TODO: Remove hard-coded values as needed
         self.resolution = resolution

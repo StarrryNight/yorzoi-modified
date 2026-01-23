@@ -375,7 +375,7 @@ def test_model(
 
                 sequences = sequences.to(device)
                 targets = targets.to(device)
-
+                print(targets)
                 outputs = model(sequences)
                 outputs = outputs.squeeze(1)  # TODO uglyy
                 loss, _, _, _ = criterion(outputs, targets)

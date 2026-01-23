@@ -8,7 +8,7 @@ from yorzoi.config import TrainConfig, BorzoiConfig
 from yorzoi.train import test_model
 import pandas as pd
 import json
-
+import os
 profiles = pd.read_csv("category_names.txt")
 confi = TrainConfig.read_from_json("train_config.json")
 
@@ -21,12 +21,15 @@ md.eval()
 
 
 # Iterate through category names and predict each 
+
+os.makedirs(f"evaluations", exist_ok=True)
 for index, path in profiles.itertuples():
-    confi.path_to_samples = f"categorized/{path}"
+    confi.path_to_samples = f"categorized/{path}.pkl"
     train, val, test = create_datasets(confi)
     train_d, val_d, test_d = create_dataloaders(confi, train, val, test)
     test_model(
         base_folder=f"evaluations/{path}" ,test_loader=test_d,model=md,criterion=None,device="cuda:0")
+    
     
 
 
