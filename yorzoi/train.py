@@ -361,6 +361,7 @@ def test_model(
     device="cuda:2",
 ):
     print("\n=== MODEL EVALUATION ===")
+    os.makedirs(f"{base_folder}/evaluations", exist_ok=True)
     criterion = poisson_multinomial
     model.eval()
     with torch.no_grad():
