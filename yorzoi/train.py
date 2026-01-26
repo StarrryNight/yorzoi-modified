@@ -27,8 +27,8 @@ from yorzoi.model.baseline import DNAConvNet
 from yorzoi.config import BorzoiConfig, TrainConfig
 from yorzoi.train_utils.data import create_datasets, create_dataloaders
 from scipy.stats import pearsonr, spearmanr
-
-# Helper ---------------------------------------------------------------------
+import math
+# Helper --------------------------------------------------------------------
 
 
 def _randomise_tracks(outputs: torch.Tensor, targets: torch.Tensor):
@@ -369,8 +369,10 @@ def test_model(
                 pred = outputs[0, 0, :].cpu()
                 actual = targets[0, 0, :].cpu()
                 u.plot_coverage(pred, actual, "Predicted", "Actual", f"{base_folder}/evaluations/pred_vs_actual_track_{i}.png")
-                pearson_sum += pearsonr(pred, actual).statistic
-                spearman_sum += spearmanr(pred,actual).statistic
+                pearson_new = pearsonr(pred, actual).statistic
+                spearman_new = spearmanr(pred,actual).statistic 
+                pearson_sum += pearson_new if math.isnan(pearson_new)= False 
+                spearman += spearman_new if math.isnan(spearman_new)= False
     batch_count = 1 if batch_count==0 else batch_count
     return {
         "pearson": round(float(pearson_sum/batch_count), 3),

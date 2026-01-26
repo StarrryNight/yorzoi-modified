@@ -52,5 +52,5 @@ def test(model_path: str|Path,
         file.write("\n")
 
 
-test(model_path="", test_path="", result_path="")
+test(model_path="trained_model/human_yac_only/model_best.pth", test_path="data/samples.pkl", result_path="results/human_yac_only/analysis.txt")
 
