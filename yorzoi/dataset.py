@@ -24,14 +24,16 @@ class GenomicDataset(Dataset):
 
         self.mean_track_values, self.std_track_values = 0.0, 0.0
         n_seen = 0
-        for p in self.samples["track_values"].sample(100):
+        n_samples_to_use = min(100, len(samples))
+        for p in self.samples["track_values"].sample(n_samples_to_use):
             arr = np.load(p)["a"]
             subset = arr.flat[:: max(1, arr.size // 10_000)]
             self.mean_track_values += subset.mean()
             self.std_track_values += subset.std()
             n_seen += 1
-        self.mean_track_values /= n_seen
-        self.std_track_values /= n_seen
+        if (n_seen>0):
+            self.mean_track_values /= n_seen
+            self.std_track_values /= n_seen
 
         # TODO: Remove hard-coded values as needed
         self.resolution = resolution

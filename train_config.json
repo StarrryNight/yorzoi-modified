@@ -11,7 +11,7 @@
     "weight_decay": 0.0000001,
     "lr": 0.00006
   },
-  "path_to_samples": "samples.pkl",
+  "path_to_samples": "data/type_splits/human_yac",
   "fwd_track_only": false,
   "subset_data": {
     "chr": [

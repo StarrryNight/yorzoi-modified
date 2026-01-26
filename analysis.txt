@@ -1,0 +1,270 @@
+E481_NC_000007.14
+pearson r: (nan, 3)         spearman r: nan
+
+E1068_NC_000007.14
+pearson r: (nan, 3)         spearman r: nan
+
+E202_NC_000007.14
+pearson r: (nan, 3)         spearman r: nan
+
+950c12_NC_000011.10
+pearson r: (nan, 3)         spearman r: nan
+
+E533_NC_000007.14
+pearson r: (nan, 3)         spearman r: nan
+
+852e11_NC_000009.12
+pearson r: (nan, 3)         spearman r: nan
+
+802D1new_NC_000003.12
+pearson r: (nan, 3)         spearman r: nan
+
+759h10_NC_000004.12
+pearson r: (0.186, 3)         spearman r: 0.109
+
+E145_NC_000007.14
+pearson r: (nan, 3)         spearman r: nan
+
+NC_001133.9
+pearson r: (0.748, 3)         spearman r: 0.607
+
+NC_001134.8
+pearson r: (0.621, 3)         spearman r: 0.497
+
+NC_001135.5
+pearson r: (0.523, 3)         spearman r: 0.57
+
+NC_001136.10
+pearson r: (0.483, 3)         spearman r: 0.269
+
+E481_NC_000007.14
+pearson r: nan         spearman r: nan
+
+E1068_NC_000007.14
+pearson r: nan         spearman r: nan
+
+E202_NC_000007.14
+pearson r: nan         spearman r: nan
+
+950c12_NC_000011.10
+pearson r: nan         spearman r: nan
+
+E533_NC_000007.14
+pearson r: nan         spearman r: nan
+
+852e11_NC_000009.12
+pearson r: nan         spearman r: nan
+
+802D1new_NC_000003.12
+pearson r: nan         spearman r: nan
+
+759h10_NC_000004.12
+pearson r: 0.186         spearman r: 0.109
+
+E145_NC_000007.14
+pearson r: nan         spearman r: nan
+
+NC_001133.9
+pearson r: 0.748         spearman r: 0.607
+
+NC_001134.8
+pearson r: 0.621         spearman r: 0.497
+
+NC_001135.5
+pearson r: 0.523         spearman r: 0.57
+
+NC_001136.10
+pearson r: 0.483         spearman r: 0.269
+
+NC_001141.2
+pearson r: 0.465         spearman r: 0.373
+
+NC_001137.3
+pearson r: 0.795         spearman r: 0.598
+
+NC_001138.5
+pearson r: 0.833         spearman r: 0.774
+
+NC_001139.9
+pearson r: 0.48         spearman r: 0.435
+
+NC_001140.6
+pearson r: 0.896         spearman r: 0.526
+
+NC_001142.9
+pearson r: 0.33         spearman r: 0.357
+
+NC_001143.9
+pearson r: -0.001         spearman r: -0.052
+
+NC_001144.5
+pearson r: 0.348         spearman r: 0.319
+
+NC_001145.3
+pearson r: nan         spearman r: nan
+
+NC_001146.8
+pearson r: 0.862         spearman r: 0.752
+
+NC_001147.6
+pearson r: -0.001         spearman r: -0.062
+
+NC_001148.4
+pearson r: 0.471         spearman r: 0.445
+
+JS274_1
+No test samples in this profile
+
+JS571_1
+No test samples in this profile
+
+JS599_1
+No test samples in this profile
+
+JS601_1
+No test samples in this profile
+
+JS602_1
+No test samples in this profile
+
+JS603_1
+No test samples in this profile
+
+JS604_1
+No test samples in this profile
+
+JS605_1
+No test samples in this profile
+
+JS606_1
+No test samples in this profile
+
+JS607_1
+No test samples in this profile
+
+JS608_1
+No test samples in this profile
+
+JS609_1
+No test samples in this profile
+
+JS610_1
+No test samples in this profile
+
+JS611_1
+No test samples in this profile
+
+JS612_1
+No test samples in this profile
+
+JS613_1
+No test samples in this profile
+
+JS614_1
+No test samples in this profile
+
+JS615_1
+No test samples in this profile
+
+JS622_1
+No test samples in this profile
+
+JS623_1
+No test samples in this profile
+
+JS624_1
+No test samples in this profile
+
+JS625_1
+No test samples in this profile
+
+JS626_1
+No test samples in this profile
+
+JS627_1
+No test samples in this profile
+
+JS628_1
+No test samples in this profile
+
+JS629_1
+No test samples in this profile
+
+JS705_1
+No test samples in this profile
+
+JS706_1
+No test samples in this profile
+
+JS707_1
+No test samples in this profile
+
+JS708_1
+No test samples in this profile
+
+JS709_1
+No test samples in this profile
+
+JS710_1
+No test samples in this profile
+
+JS711_1
+No test samples in this profile
+
+JS712_1
+No test samples in this profile
+
+JS713_1
+No test samples in this profile
+
+JS714_1
+No test samples in this profile
+
+JS715_1
+No test samples in this profile
+
+JS716_1
+No test samples in this profile
+
+JS718_1
+No test samples in this profile
+
+JS719_1
+No test samples in this profile
+
+JS720_1
+No test samples in this profile
+
+JS721_1
+No test samples in this profile
+
+JS722_1
+No test samples in this profile
+
+JS724_1
+No test samples in this profile
+
+JS726_1
+No test samples in this profile
+
+JS727_1
+No test samples in this profile
+
+JS728_1
+No test samples in this profile
+
+JS729_1
+No test samples in this profile
+
+JS730_1
+No test samples in this profile
+
+JS731_1
+No test samples in this profile
+
+JS732_1
+No test samples in this profile
+
+JS733_1
+No test samples in this profile
+
