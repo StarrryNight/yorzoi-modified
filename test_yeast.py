@@ -37,7 +37,6 @@ def test(model_path: str|Path,
             file.write("No test samples in this profile")
             file.write("\n")
             file.write("\n")
-        continue
     train_d, val_d, test_d = create_dataloaders(confi, train, val, test)
     metric = test_model(
         base_folder=f"evaluations/{path}" ,test_loader=test_d,model=md,criterion=None,device="cuda:0")
