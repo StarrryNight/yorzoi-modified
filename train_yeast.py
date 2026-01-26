@@ -4,14 +4,22 @@ from yorzoi.model.borzoi import Borzoi
 from yorzoi.config import TrainConfig, BorzoiConfig
 import torch
 from yorzoi.loss import poisson_multinomial
+import os
 
-RUN_PATH = "trained_model/human_yac_only"
+task_id = int(os.environ.get('SLURM_ARRAY_TASK_ID', 0)) 
+if(task_id == 0):
+    RUN_PATH = "trained_model/human_yac_only"
+    PATH_TO_SAMPLES = "data/type_splits/human_yac.pkl"
+if(task_id ==1): 
+    RUN_PATH = "trained_model/others_only"
+    PATH_TO_SAMPLES = "data/type_splits/others.pkl"
 borzoi_config = BorzoiConfig()
 
 import wandb
 
+'''
 wandb.login()
-
+'''
 # Project that the run is recorded to
 project = "yorzoi"
 
@@ -23,11 +31,11 @@ config = {
 
 wandb.init(project=project, config=config)
 confi = TrainConfig.read_from_json("train_config.json")
+confi.path_to_samples = PATH_TO_SAMPLES
 train, val, test = create_datasets(confi)
 train_d, val_d, test_d = create_dataloaders(confi, train, val, test)
 md = Borzoi(BorzoiConfig.read_from_json(confi.borzoi_cfg))
 
-'''
 train_model(
 run_path=RUN_PATH,
 model=md,
@@ -37,7 +45,7 @@ criterion=poisson_multinomial,
 optimizer=confi.optimizer,
 scheduler=confi.scheduler,
 run_config=confi)
-'''
+
 
 '''
  run_path: str,
