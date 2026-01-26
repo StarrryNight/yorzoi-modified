@@ -17,7 +17,7 @@ def split_to_types():
             temp = pd.concat([dic.get(typee), c.loc[[index]]], ignore_index=True)
             dic.update({typee: temp})
     file_path = f"{DATA_DIR}/type_splits"
-    os.mkdirs(file_path, exist_ok = true)
+    os.mkdir(file_path)
 
 
     with open(f"{DATA_DIR}/type_splits.txt",'a') as file:
@@ -42,7 +42,7 @@ def split_to_categories():
             temp = pd.concat([dic.get(row['chr']), c.loc[[index]]], ignore_index=True)
             dic.update({row['chr']: temp})
     file_path = f"{DATA_DIR}/categories"
-    os.mkdirs(file_path, exist_ok = true)
+    os.mkdir(file_path)
 
 
     with open(f"{DATA_DIR}/categories.txt",'a') as file:
@@ -53,3 +53,7 @@ def split_to_categories():
         with open(f"{file_path}/{key}.pkl", 'wb') as file:
             pickle.dump(value, file)
 
+
+
+split_to_categories()
+split_to_types()
