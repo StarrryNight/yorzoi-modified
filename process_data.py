@@ -4,6 +4,7 @@ import pandas as pd
 import os
 
 dic = {}
+
 c = pd.read_pickle("samples.pkl")
 for index, row in c.iterrows():
     typee = "human_yac" if (row['chr'][:2]!="JS" and row['chr'][:2]!="NC") else "others"
