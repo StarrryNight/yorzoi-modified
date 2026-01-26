@@ -9,24 +9,30 @@ from yorzoi.train import test_model
 import pandas as pd
 import json
 import os
+
+task_id = int(os.environ.get('SLURM_ARRAY_TASK_ID', 0)) 
 profiles = pd.read_csv("category_names.txt")
 confi = TrainConfig.read_from_json("train_config.json")
 
-# Set up model
-md = Borzoi(BorzoiConfig.read_from_json(confi.borzoi_cfg))
-model_sd = torch.load("trained_model/model_best.pth")
-md.load_state_dict(model_sd)
-md = md.to("cuda:0")
-md.eval()
+def test(model_path: str|Path,
+         test_path: str|Path,
+         result_path: str|Path):
 
 
-# Iterate through category names and predict each 
-os.makedirs(f"evaluations", exist_ok=True)
-for index, path in profiles.itertuples():
-    confi.path_to_samples = f"categorized/{path}.pkl"
+    # Set up model
+    md = Borzoi(BorzoiConfig.read_from_json(confi.borzoi_cfg))
+    model_sd = torch.load(model_path)
+    md.load_state_dict(model_sd)
+    md = md.to("cuda:0")
+    md.eval()
+
+
+    # Iterate through category names and predict each 
+    os.makedirs(f"evaluations", exist_ok=True)
+    confi.path_to_samples = test_path
     train, val, test = create_datasets(confi)
     if (len(test.samples)==0):
-        with open ("analysis.txt",'a') as file:
+        with open (result_path,'a') as file:
             file.write(path)
             file.write("\n")
             file.write("No test samples in this profile")
@@ -38,7 +44,7 @@ for index, path in profiles.itertuples():
         base_folder=f"evaluations/{path}" ,test_loader=test_d,model=md,criterion=None,device="cuda:0")
     pearsonr = metric.get("pearson")
     spearmanr = metric.get("spearman")
-    with open ("analysis.txt",'a') as file:
+    with open (result_path,'a') as file:
         file.write(path)
         file.write("\n")
         file.write(f"pearson r: {pearsonr}")
@@ -46,7 +52,7 @@ for index, path in profiles.itertuples():
         file.write(f"spearman r: {spearmanr}")
         file.write("\n")
         file.write("\n")
-    
+
 
 
 
