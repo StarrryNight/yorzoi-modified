@@ -5,7 +5,7 @@ from yorzoi.config import TrainConfig, BorzoiConfig
 import torch
 from yorzoi.loss import poisson_multinomial
 
-RUN_PATH = "trained_model"
+RUN_PATH = "trained_model/human_yac_only"
 borzoi_config = BorzoiConfig()
 
 import wandb
