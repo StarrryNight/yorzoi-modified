@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "/scratch/samuel06/yorzoi-modified/train_yeast.py", line 1, in <module>
-    from yorzoi.train_utils.data import create_datasets, create_dataloaders
-  File "/scratch/samuel06/yorzoi-modified/yorzoi/train_utils/data.py", line 1, in <module>
-    import pandas as pd
-ModuleNotFoundError: No module named 'pandas'

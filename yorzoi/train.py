@@ -196,16 +196,6 @@ def train_model(
         avg_train_loss = total_loss / len(train_loader)
         avg_train_poisson_loss = total_poisson_loss / len(train_loader)
         avg_train_multinomial_loss = total_multinomial_loss / len(train_loader)
-        wandb.log({"avg_train_loss": avg_train_loss, "epoch": epoch + 1})
-        wandb.log(
-            {"avg_train_poisson_loss": avg_train_poisson_loss, "epoch": epoch + 1}
-        )
-        wandb.log(
-            {
-                "avg_train_multinomial_loss": avg_train_multinomial_loss,
-                "epoch": epoch + 1,
-            }
-        )
         print("Total loss:", total_loss)
 
         # Evaluate performance on validation set
@@ -259,13 +249,6 @@ def train_model(
         avg_val_poisson_loss = val_poisson_loss / len(val_loader)
         avg_val_multinomial_loss = val_multinomial_loss / len(val_loader)
 
-        wandb.log({"avg_val_loss": avg_val_loss, "epoch": epoch + 1})
-        wandb.log(
-            {"avg_val_poisson_loss": avg_val_poisson_loss, "epoch": epoch + 1}
-        )  # TODO
-        wandb.log(
-            {"avg_val_multinomial_loss": avg_val_multinomial_loss, "epoch": epoch + 1}
-        )  # TODO
 
         # Plot the last batch of validation predictions
 
@@ -540,7 +523,6 @@ def main(cfg_path: str, device: str, model_name: str, run_id: str):
     else:
         raise ValueError("Unknown scheduler value")
 
-    wandb.watch(model, log="all", log_freq=100)
 
     # summary(model, input_size=(1, 4992, 4), device=device)
 
