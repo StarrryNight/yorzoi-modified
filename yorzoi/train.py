@@ -125,7 +125,7 @@ def train_model(
 ):
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.00006,weight_decay=0.0000001)
     model.to(device)
-
+    os.makedirs(run_path, exist_ok=True)
     train_losses = []
     val_losses = []
 
@@ -266,7 +266,7 @@ def train_model(
         plt.ylabel("Loss")
         plt.title("Training and Validation Loss")
         plt.legend()
-        wandb.log({"loss_curve": wandb.Image(plt)})
+
         plt.savefig(f"{run_path}/training_validation_loss.png")
         plt.close()
 
