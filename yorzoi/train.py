@@ -371,8 +371,11 @@ def test_model(
                 u.plot_coverage(pred, actual, "Predicted", "Actual", f"{base_folder}/evaluations/pred_vs_actual_track_{i}.png")
                 pearson_new = pearsonr(pred, actual).statistic
                 spearman_new = spearmanr(pred,actual).statistic 
-                pearson_sum += pearson_new if math.isnan(pearson_new)= False 
-                spearman += spearman_new if math.isnan(spearman_new)= False
+                pearson_sum += pearson_new if math.isnan(pearson_new)== False else 0 
+                spearman_sum += spearman_new if math.isnan(spearman_new)== False else 0
+                if (math.isnan(pearson_new) or math.isnan(spearman_new)):
+                    batch_count-=1
+                
     batch_count = 1 if batch_count==0 else batch_count
     return {
         "pearson": round(float(pearson_sum/batch_count), 3),
