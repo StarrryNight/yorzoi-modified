@@ -79,11 +79,49 @@ class ConvBlock(nn.Module):
         x = self.conv_layer(x)
         return x
 
+class Sorzoi(PreTrainedModel):
+    def __init__(self,config):
+        super(Borzoi, self).__init__(config)
+        self._max_pool=nn.MaxPool1d(kernel_size=2, padding=0)
+        self.res_tower = nn.Sequential(
+            # EDIT: reduced number of ConvBlocks in tower as sequence length is much smaller
+            ConvBlock(in_channels=256, out_channels=320, kernel_size=5),
+            self._max_pool,
+            ConvBlock(in_channels=320, out_channels=384, kernel_size=5),
+            self._max_pool,
+            ConvBlock(in_channels=384, out_channels=448, kernel_size=5),
+        )
+
+        self.unet1 = nn.Sequential(
+            self._max_pool,
+            ConvBlock(
+                in_channels=448, out_channels=512, kernel_size=5
+            ),  # EDIT: changed in_channels
+        )
+        self.conv_dna == ConvDna(out_channels=256, resolution=config.resolution)
+             # 1. Global Pooling to handle variable sequence lengths or condense features
+        self.global_pool = nn.AdaptiveAvgPool1d(1) 
+        
+        # 2. The Regressor Head
+        self.expression_head = nn.Sequential(
+            nn.Linear(512, 256), # 512 matches your last ConvBlock out_channels
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(256, 1),   # Output a single value (expression level)
+            nn.Softplus()        # Ensures expression is always positive
+        )
+    def build_model():
+        x = x.permute(0, 2, 1)
+        x = self.conv_dna(x)
+        x_unet0 = self.res_tower(x)
+        x_unet1 = self.unet1(x_unet0)
+        x = self.global_pool(x_unet1)
+        x = self.expression_head(x)
+        return x
 
 class Borzoi(PreTrainedModel):
     config_class = BorzoiConfig
     base_model_prefix = "borzoi"
-
     @staticmethod
     def from_hparams(**kwargs):
         return Borzoi(BorzoiConfig(**kwargs))
