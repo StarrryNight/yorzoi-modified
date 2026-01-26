@@ -29,7 +29,6 @@ config = {
     'lr' : 0.00006
 }
 
-wandb.init(project=project, config=config)
 confi = TrainConfig.read_from_json("train_config.json")
 confi.path_to_samples = PATH_TO_SAMPLES
 train, val, test = create_datasets(confi)
