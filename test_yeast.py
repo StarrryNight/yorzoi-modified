@@ -11,7 +11,6 @@ import json
 import os
 
 task_id = int(os.environ.get('SLURM_ARRAY_TASK_ID', 0)) 
-profiles = pd.read_csv("category_names.txt")
 confi = TrainConfig.read_from_json("train_config.json")
 
 def test(model_path: str|Path,
@@ -54,5 +53,5 @@ def test(model_path: str|Path,
         file.write("\n")
 
 
-
+test(model_path="", test_path="", result_path="")
 
