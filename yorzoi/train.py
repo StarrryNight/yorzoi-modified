@@ -124,6 +124,7 @@ def train_model(
     run_config=None,
 ):
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.00006,weight_decay=0.0000001)
+    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2)
     model.to(device)
     os.makedirs(run_path, exist_ok=True)
     train_losses = []
