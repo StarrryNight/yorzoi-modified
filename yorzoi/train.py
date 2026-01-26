@@ -7,7 +7,6 @@ python -m clex.train -c [path/to/config] -g [gpu name] -m [clex|base] -d [1-2 wo
 E.g.: python -m clex.train -c /home/tds122/clex/train_configs/template.json -g cuda:0 -m clex -d template_description
 """
 
-import wandb
 import os
 import json
 from time import time
@@ -278,7 +277,6 @@ def train_model(
         if improved:
             best_val_loss = avg_val_loss
             torch.save(model.state_dict(), f"{run_path}/model_best.pth")
-            wandb.save(f"{run_path}/model_best.pth")
             print(
                 f"Saved best model at epoch {epoch + 1} (val_loss={avg_val_loss:.4f})"
             )
@@ -335,7 +333,6 @@ def train_model(
                 )
                 break
 
-    wandb.save(json.dumps(run_config.__dict__))
 import yorzoi.model.utils as u
 def test_model(
     base_folder: str,
@@ -428,7 +425,6 @@ def main(cfg_path: str, device: str, model_name: str, run_id: str):
         dst=f"{base_folder}/train_config.json",
     )
 
-    wandb.init(project="clex", config=cfg.__dict__, name=run_id)
 
     print("Loading data...")
 
@@ -561,10 +557,8 @@ def main(cfg_path: str, device: str, model_name: str, run_id: str):
 
     torch.save(model.state_dict(), f"{base_folder}/model_final.pth")
     model.save_pretrained(base_folder)
-    wandb.save(f"{base_folder}/model_final.pth")
     repo_id = f"tom-ellis-lab/clex-{run_id}"
     model.push_to_hub(repo_id, private=False)
-    wandb.finish()
 
 
 if __name__ == "__main__":
