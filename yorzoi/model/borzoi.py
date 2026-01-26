@@ -110,7 +110,7 @@ class Sorzoi(PreTrainedModel):
             nn.Linear(256, 1),   # Output a single value (expression level)
             nn.Softplus()        # Ensures expression is always positive
         )
-    def build_model():
+    def forward(self,x):
         x = x.permute(0, 2, 1)
         x = self.conv_dna(x)
         x_unet0 = self.res_tower(x)
@@ -118,6 +118,7 @@ class Sorzoi(PreTrainedModel):
         x = self.global_pool(x_unet1)
         x = self.expression_head(x)
         return x
+
 
 class Borzoi(PreTrainedModel):
     config_class = BorzoiConfig
