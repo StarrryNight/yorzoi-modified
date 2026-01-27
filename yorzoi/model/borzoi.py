@@ -80,8 +80,23 @@ class ConvBlock(nn.Module):
         return x
 
 class Sorzoi(PreTrainedModel):
-    def __init__(self,config):
-        super(Borzoi, self).__init__(config)
+    """
+    Simplified Borzoi model for pretraining the first few convolutional layers.
+    Predicts a single expression value from DNA sequence.
+
+    Architecture:
+        conv_dna (4 -> 256) -> res_tower (256 -> 448) -> unet1 (448 -> 512)
+        -> global_pool -> expression_head (512 -> 1)
+    """
+    config_class = BorzoiConfig
+    base_model_prefix = "sorzoi"
+
+    @staticmethod
+    def from_hparams(**kwargs):
+        return Sorzoi(BorzoiConfig(**kwargs))
+
+    def __init__(self, config):
+        super(Sorzoi, self).__init__(config)
         self._max_pool=nn.MaxPool1d(kernel_size=2, padding=0)
         self.res_tower = nn.Sequential(
             # EDIT: reduced number of ConvBlocks in tower as sequence length is much smaller
@@ -98,7 +113,7 @@ class Sorzoi(PreTrainedModel):
                 in_channels=448, out_channels=512, kernel_size=5
             ),  # EDIT: changed in_channels
         )
-        self.conv_dna == ConvDna(out_channels=256, resolution=config.resolution)
+        self.conv_dna = ConvDna(out_channels=256, resolution=config.resolution)
              # 1. Global Pooling to handle variable sequence lengths or condense features
         self.global_pool = nn.AdaptiveAvgPool1d(1) 
         
@@ -110,12 +125,17 @@ class Sorzoi(PreTrainedModel):
             nn.Linear(256, 1),   # Output a single value (expression level)
             nn.Softplus()        # Ensures expression is always positive
         )
-    def forward(self,x):
+    def forward(self, x):
+        # x shape: (batch, seq_len, 4) -> permute to (batch, 4, seq_len)
         x = x.permute(0, 2, 1)
         x = self.conv_dna(x)
         x_unet0 = self.res_tower(x)
         x_unet1 = self.unet1(x_unet0)
+        # Global pool: (batch, 512, L) -> (batch, 512, 1)
         x = self.global_pool(x_unet1)
+        # Squeeze to (batch, 512) for linear layer
+        x = x.squeeze(-1)
+        # Expression head: (batch, 512) -> (batch, 1)
         x = self.expression_head(x)
         return x
 
@@ -289,6 +309,59 @@ class Borzoi(PreTrainedModel):
             module.weight.data.fill_(1.0)
         if isinstance(module, (nn.Linear, nn.Conv1d)) and module.bias is not None:
             module.bias.data.zero_()
+
+    def load_pretrained_sorzoi(self, sorzoi_model_or_path, freeze_pretrained=False):
+        """
+        Load pretrained weights from a Sorzoi model into the first layers of Borzoi.
+
+        Transfers weights for: conv_dna, res_tower, unet1
+
+        Args:
+            sorzoi_model_or_path: Either a Sorzoi model instance or path to saved weights
+            freeze_pretrained: If True, freeze the pretrained layers
+        """
+        if isinstance(sorzoi_model_or_path, (str, Path)):
+            # Load from checkpoint path
+            checkpoint = torch.load(sorzoi_model_or_path, map_location='cpu')
+            if 'state_dict' in checkpoint:
+                sorzoi_state_dict = checkpoint['state_dict']
+            elif 'model_state_dict' in checkpoint:
+                sorzoi_state_dict = checkpoint['model_state_dict']
+            else:
+                sorzoi_state_dict = checkpoint
+        else:
+            # It's a model instance
+            sorzoi_state_dict = sorzoi_model_or_path.state_dict()
+
+        # Get Borzoi's state dict
+        borzoi_state_dict = self.state_dict()
+
+        # Layers to transfer from Sorzoi to Borzoi
+        layers_to_transfer = ['conv_dna', 'res_tower', 'unet1']
+
+        transferred = []
+        for key in sorzoi_state_dict:
+            # Check if this key belongs to one of the layers we want to transfer
+            if any(key.startswith(layer) for layer in layers_to_transfer):
+                if key in borzoi_state_dict:
+                    if sorzoi_state_dict[key].shape == borzoi_state_dict[key].shape:
+                        borzoi_state_dict[key] = sorzoi_state_dict[key]
+                        transferred.append(key)
+                    else:
+                        print(f"Shape mismatch for {key}: Sorzoi {sorzoi_state_dict[key].shape} vs Borzoi {borzoi_state_dict[key].shape}")
+
+        # Load the updated state dict
+        self.load_state_dict(borzoi_state_dict)
+        print(f"Transferred {len(transferred)} parameter tensors from Sorzoi to Borzoi")
+
+        # Optionally freeze the pretrained layers
+        if freeze_pretrained:
+            for name, param in self.named_parameters():
+                if any(name.startswith(layer) for layer in layers_to_transfer):
+                    param.requires_grad = False
+            print("Froze pretrained layers: conv_dna, res_tower, unet1")
+
+        return transferred
 
     def set_track_subset(self, track_subset):
         """
