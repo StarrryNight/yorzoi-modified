@@ -5,30 +5,32 @@ from yorzoi.config import TrainConfig, BorzoiConfig
 import torch
 from yorzoi.loss import poisson_multinomial
 import os
+from yorzoi.dl_utils import prepare_dataloader
 
-task_id = int(os.environ.get('SLURM_ARRAY_TASK_ID', 0)) 
-PATH_TO_DATA = "data/train.txt"
-borzoi_config = BorzoiConfig()
+class Pretrain_res():
+    task_id = int(os.environ.get('SLURM_ARRAY_TASK_ID', 0)) 
+    PATH_TO_TRAIN = "data/train.txt"
+    PATH_TO_VAL = "data/val.txt"
+    Sorzoi_config = BorzoiConfig()
+    confi = TrainConfig.read_from_json("train_config.json")
+    confi.path_to_samples = PATH_TO_SAMPLES
+    train, val, test = create_datasets(confi)
+    train_d, val_d, test_d = create_dataloaders(confi, train, val, test)
+    md = Borzoi(BorzoiConfig.read_from_json(confi.borzoi_cfg))
 
-import wandb
+    train_dl = prepare_dataloader(tsv_path=PATH_TO_TRAIN,
+                                  seqsize = 110,
+                                  species = "yeast",
+                                  plasmid_path="data/plasmid.json")
 
-'''
-wandb.login()
-'''
-# Project that the run is recorded to
-project = "yorzoi"
 
-# Dictionary with hyperparameters
-config = {
-    'epochs' : 80,
-    'lr' : 0.00006
-}
+    train_dl = prepare_dataloader(tsv_path=PATH_TO_VAL,
+                                  seqsize = 110,
+                                  species = "yeast",
+                                  plasmid_path="data/plasmid.json")
 
-confi = TrainConfig.read_from_json("train_config.json")
-confi.path_to_samples = PATH_TO_SAMPLES
-train, val, test = create_datasets(confi)
-train_d, val_d, test_d = create_dataloaders(confi, train, val, test)
-md = Borzoi(BorzoiConfig.read_from_json(confi.borzoi_cfg))
+    
+
 
 train_model(
 run_path=RUN_PATH,
