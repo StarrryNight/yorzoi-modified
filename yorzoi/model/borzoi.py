@@ -122,12 +122,10 @@ class Sorzoi(PreTrainedModel):
             nn.Linear(512, 256), # 512 matches your last ConvBlock out_channels
             nn.ReLU(),
             nn.Dropout(0.1),
-            nn.Linear(256, 1),   # Output a single value (expression level)
-            nn.Softplus()        # Ensures expression is always positive
+            nn.Linear(256, 18),   # Output a single value (expression level)
         )
     def forward(self, x):
         # x shape: (batch, seq_len, 4) -> permute to (batch, 4, seq_len)
-        x = x.permute(0, 2, 1)
         x = self.conv_dna(x)
         x_unet0 = self.res_tower(x)
         x_unet1 = self.unet1(x_unet0)

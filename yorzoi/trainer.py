@@ -53,14 +53,15 @@ class Trainer:
         x = batch["x"].to(self.device)
         y = batch["y"].to(self.device).float()
 
-        y_pred = self.model(x).squeeze()
+        y_pred = self.model(x)
         if "y_probs" in batch: # yeast, classification
-            y_probs = batch["y_probs"].to(self.device)
+            y_probs = batch["y_probs"].to(self.device) 
+            print(f"y_pred shape: {y_pred.shape}")
+            print(f"y_probs shape: {y_probs.shape}")
             loss = self.classification_criterion(y_pred, y_probs)
         else: # regression
             y = batch["y"].to(self.device)
             loss = self.regression_criterion(y_pred, y.squeeze(-1))
-
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()

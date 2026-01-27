@@ -100,9 +100,9 @@ def preprocess_tsv(path: str,
     df = pd.read_csv(path, sep="\t", header=None)
     df.columns = ['seq', 'expr']
     df = preprocess_data(df, seqsize=seqsize, species=species, plasmid_path=plasmid_path)
-    df = add_revcomp(df,revcomp_same_batch=revcomp_same_batch,batch_size=batch_size)
-    if species == 'yeast':
-        df = add_singleton_column(df)
+    # df = add_revcomp(df,revcomp_same_batch=revcomp_same_batch,batch_size=batch_size)
+    # if species == 'yeast':
+    #     df = add_singleton_column(df)
     return df
 
 class SeqExprDataset(torch.utils.data.Dataset):
@@ -137,13 +137,6 @@ class SeqExprDataset(torch.utils.data.Dataset):
         seq = self.transform(row['seq']) # type: ignore
         to_concat = [seq]
         
-        if self.use_reverse_channel:
-            rev = torch.full( (1, self.seqsize), row['rev'], dtype=torch.float32) # type: ignore
-            to_concat.append(rev)
-            
-        if self.use_single_channel:
-            single = torch.full( (1, self.seqsize) , row['is_singleton'], dtype=torch.float32) # type: ignore
-            to_concat.append(single)
 
         if len(to_concat) > 1:    
             X = torch.concat(to_concat, dim=0)
