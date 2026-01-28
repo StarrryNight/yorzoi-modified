@@ -53,6 +53,6 @@ def test(name: str,
         file.write("\n")
 
 
-test(name = "human_yac_only", model_path="trained_model/human_yac_only/model_best.pth", test_path="data/samples.pkl", result_path="results/human_yac_only/analysis.txt")
+test(name = "human_yac_only", model_path="trained_model/human_yac_only/model_best.pth", test_path="data/type_splits/others.pkl", result_path="results/human_yac_only/analysis.txt")
 
-test(name = "others_only", model_path="trained_model/others_only/model_best.pth", test_path="data/samples.pkl", result_path="results/others_only/analysis.txt")
+test(name = "others_only", model_path="trained_model/others_only/model_best.pth", test_path="data/type_splits/human_yac.pkl", result_path="results/others_only/analysis.txt")
