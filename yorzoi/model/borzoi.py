@@ -124,17 +124,41 @@ class Sorzoi(PreTrainedModel):
             nn.Dropout(0.1),
             nn.Linear(256, 18),   # Output a single value (expression level)
         )
-    def forward(self, x):
-        # x shape: (batch, seq_len, 4) -> permute to (batch, 4, seq_len)
+    def get_embs(self, x):
+        """
+        Gets embeddings from the convolutional layers before the expression head.
+
+        Args:
+            x (torch.Tensor): Input tensor of shape (N, 4, L).
+
+        Returns:
+            torch.Tensor: Embeddings of shape (N, 512).
+        """
         x = self.conv_dna(x)
         x_unet0 = self.res_tower(x)
         x_unet1 = self.unet1(x_unet0)
-        # Global pool: (batch, 512, L) -> (batch, 512, 1)
         x = self.global_pool(x_unet1)
-        # Squeeze to (batch, 512) for linear layer
         x = x.squeeze(-1)
-        # Expression head: (batch, 512) -> (batch, 1)
-        x = self.expression_head(x)
+        return x
+
+    def predict(self, seqs):
+        """
+        Predicts expression values for input sequences.
+
+        Args:
+            seqs (torch.Tensor): Nx4xL tensor of one-hot sequences
+
+        Returns:
+            torch.Tensor: Nx18 tensor of expression predictions
+        """
+        embs = self.get_embs(seqs)
+        return self.expression_head(embs)
+
+    def forward(self, x):
+        # x shape: (batch, 4, seq_len)
+        embs = self.get_embs(x)
+        # Expression head: (batch, 512) -> (batch, 18)
+        x = self.expression_head(embs)
         return x
 
 
