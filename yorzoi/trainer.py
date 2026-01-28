@@ -77,7 +77,7 @@ class Trainer:
             for batch in tqdm(self.val_dataloader, desc="Validation"):
                 x = batch["x"].to(self.device)
                 y = batch["y"].to(self.device).float()
-                pred = self.model.predict(x).squeeze()
+                pred = self.model.predict(x)
 
                 y_true.append(y.cpu().numpy())
                 y_pred.append(pred.cpu().numpy())

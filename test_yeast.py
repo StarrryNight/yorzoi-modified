@@ -13,9 +13,9 @@ import os
 task_id = int(os.environ.get('SLURM_ARRAY_TASK_ID', 0)) 
 confi = TrainConfig.read_from_json("train_config.json")
 
-def test(model_path: str|Path,
-         test_path: str|Path,
-         result_path: str|Path):
+def test(model_path: str,
+         test_path: str,
+         result_path: str):
 
 
     # Set up model
@@ -52,6 +52,6 @@ def test(model_path: str|Path,
         file.write("\n")
 
 
-test(model_path="trained_model/human_yac_only/model_best.pth", test_path="data/samples.pkl", result_path="results/human_yac_only/analysis.txt")
+test(model_path="trained_model/human_yac_only/model_best.pth", test_path="data/type_splits/others.pkl", result_path="results/human_yac_only/analysis.txt")
 
-test(model_path="trained_model/others_only/model_best.pth", test_path="data/samples.pkl", result_path="results/others_only/analysis.txt")
+test(model_path="trained_model/others_only/model_best.pth", test_path="data/type_splits/human_yac.pkl", result_path="results/others_only/analysis.txt")
