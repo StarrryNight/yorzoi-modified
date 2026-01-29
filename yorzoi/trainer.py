@@ -73,11 +73,24 @@ class Trainer:
         self.model.eval()
         y_true, y_pred = [], []
 
+        # Bin centers for converting 18-bin predictions back to scalar
+        # Bins are defined by POINTS = [-inf, 1, 2, ..., 17, inf]
+        # So bin centers are approximately [0.5, 1.5, 2.5, ..., 17.5]
+        bin_centers = torch.arange(0.5, 18.0, 1.0).to(self.device)
+
         with torch.no_grad():
             for batch in tqdm(self.val_dataloader, desc="Validation"):
                 x = batch["x"].to(self.device)
                 y = batch["y"].to(self.device).float()
-                pred = self.model.predict(x).squeeze()
+                pred = self.model(x)
+
+                # If model outputs 18 bins (classification), convert to expected value
+                if pred.dim() > 1 and pred.shape[-1] == 18:
+                    # Convert log-probs to probs and compute expected value
+                    probs = torch.softmax(pred, dim=-1)
+                    pred = (probs * bin_centers).sum(dim=-1)
+                else:
+                    pred = pred.squeeze()
 
                 y_true.append(y.cpu().numpy())
                 y_pred.append(pred.cpu().numpy())
