@@ -53,15 +53,14 @@ class Trainer:
         x = batch["x"].to(self.device)
         y = batch["y"].to(self.device).float()
 
-        y_pred = self.model(x)
+        y_pred = self.model(x).squeeze()
         if "y_probs" in batch: # yeast, classification
-            y_probs = batch["y_probs"].to(self.device) 
-            print(f"y_pred shape: {y_pred.shape}")
-            print(f"y_probs shape: {y_probs.shape}")
+            y_probs = batch["y_probs"].to(self.device)
             loss = self.classification_criterion(y_pred, y_probs)
         else: # regression
             y = batch["y"].to(self.device)
             loss = self.regression_criterion(y_pred, y.squeeze(-1))
+
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()
@@ -77,7 +76,7 @@ class Trainer:
             for batch in tqdm(self.val_dataloader, desc="Validation"):
                 x = batch["x"].to(self.device)
                 y = batch["y"].to(self.device).float()
-                pred = self.model.predict(x)
+                pred = self.model.predict(x).squeeze()
 
                 y_true.append(y.cpu().numpy())
                 y_pred.append(pred.cpu().numpy())
@@ -90,6 +89,7 @@ class Trainer:
             "pearsonr": float(np.corrcoef(y_true, y_pred)[0, 1])
         }
         return metrics
+
 
     def save_model(self, epoch: str):
         torch.save(self.model.state_dict(), self.model_dir / f"model_{epoch}.pth")

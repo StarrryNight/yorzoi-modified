@@ -79,6 +79,23 @@ class ConvBlock(nn.Module):
         x = self.conv_layer(x)
         return x
 
+
+class YeastFinalBlock(nn.Module):
+    def __init__(self,in_channels,out_channels=18):
+        super().__init__()
+        self.final_mapper = nn.Conv1d(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=1,
+                padding='same'
+        )
+    
+    def forward(self, x):
+        x = self.final_mapper(x)
+        x = F.adaptive_avg_pool1d(x, 1)
+        x = x.squeeze(2) 
+        logprobs = F.log_softmax(x, dim=1)
+        return logprobs
 class Sorzoi(PreTrainedModel):
     """
     Simplified Borzoi model for pretraining the first few convolutional layers.
@@ -106,6 +123,7 @@ class Sorzoi(PreTrainedModel):
             self._max_pool,
             ConvBlock(in_channels=384, out_channels=448, kernel_size=5),
         )
+        self.yeast_final_block = YeastFinalBlock
 
         self.unet1 = nn.Sequential(
             self._max_pool,
@@ -152,7 +170,7 @@ class Sorzoi(PreTrainedModel):
             torch.Tensor: Nx18 tensor of expression predictions
         """
         embs = self.get_embs(seqs)
-        return self.expression_head(embs)
+        return self.yeast_final_block(embs)
 
     def forward(self, x):
         # x shape: (batch, 4, seq_len)
