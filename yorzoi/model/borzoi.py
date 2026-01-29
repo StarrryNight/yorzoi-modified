@@ -26,6 +26,7 @@ from pathlib import Path
 from .utils import Residual, TargetLengthCrop, undo_squashed_scale
 from .attn_modules import Attention, FlashAttention
 
+import torch.nn.functional as F
 import pandas as pd
 
 # torch.backends.cudnn.deterministic = True
@@ -81,19 +82,14 @@ class ConvBlock(nn.Module):
 
 
 class YeastFinalBlock(nn.Module):
-    def __init__(self,in_channels,out_channels=18):
+    def __init__(self, in_channels, out_channels=18):
         super().__init__()
-        self.final_mapper = nn.Conv1d(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                kernel_size=1,
-                padding='same'
-        )
-    
+        # Use Linear since get_embs returns 2D tensor (N, in_channels)
+        self.final_mapper = nn.Linear(in_channels, out_channels)
+
     def forward(self, x):
+        # x shape: (N, in_channels)
         x = self.final_mapper(x)
-        x = F.adaptive_avg_pool1d(x, 1)
-        x = x.squeeze(2) 
         logprobs = F.log_softmax(x, dim=1)
         return logprobs
 class Sorzoi(PreTrainedModel):
@@ -123,7 +119,7 @@ class Sorzoi(PreTrainedModel):
             self._max_pool,
             ConvBlock(in_channels=384, out_channels=448, kernel_size=5),
         )
-        self.yeast_final_block = YeastFinalBlock
+        self.yeast_final_block = YeastFinalBlock(in_channels=512)
 
         self.unet1 = nn.Sequential(
             self._max_pool,
