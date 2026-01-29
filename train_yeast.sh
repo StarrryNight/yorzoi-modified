@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=yorzoi_train
-#SBATCH --account=rrg-cdeboer
+#SBATCH --account=def-cdeboer
 #SBATCH --time=03:00:00         
 #SBATCH --gpus=h100:1
 #SBATCH --nodes=1

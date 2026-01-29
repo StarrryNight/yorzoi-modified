@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=yorzoi_pretrain
-#SBATCH --account=rrg-cdeboer
-#SBATCH --time=24:00:00         
+#SBATCH --account=def-cdeboer
+#SBATCH --time=5:00:00         
 #SBATCH --gpus=h100:1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1

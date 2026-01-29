@@ -140,7 +140,7 @@ class Sorzoi(PreTrainedModel):
             nn.Linear(512, 256), # 512 matches your last ConvBlock out_channels
             nn.ReLU(),
             nn.Dropout(0.1),
-            nn.Linear(256, 18),   # Output a single value (expression level)
+            nn.Linear(256, 1),   # Output a single value (expression level)
         )
     def get_embs(self, x):
         """
@@ -176,7 +176,7 @@ class Sorzoi(PreTrainedModel):
         # x shape: (batch, 4, seq_len)
         embs = self.get_embs(x)
         # Expression head: (batch, 512) -> (batch, 18)
-        x = self.expression_head(embs)
+        x = self.yeast_final_block(embs)
         return x
 
 
