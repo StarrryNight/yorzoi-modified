@@ -123,7 +123,7 @@ class Sorzoi(PreTrainedModel):
             self._max_pool,
             ConvBlock(in_channels=384, out_channels=448, kernel_size=5),
         )
-        self.yeast_final_block = YeastFinalBlock
+        self.yeast_final_block = YeastFinalBlock(in_channels=512)
 
         self.unet1 = nn.Sequential(
             self._max_pool,
@@ -170,13 +170,13 @@ class Sorzoi(PreTrainedModel):
             torch.Tensor: Nx18 tensor of expression predictions
         """
         embs = self.get_embs(seqs)
-        return self.yeast_final_block(embs)
+        return self.expression_head(embs)
 
     def forward(self, x):
         # x shape: (batch, 4, seq_len)
         embs = self.get_embs(x)
         # Expression head: (batch, 512) -> (batch, 18)
-        x = self.yeast_final_block(embs)
+        x = self.expression_head(embs)
         return x
 
 

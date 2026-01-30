@@ -54,12 +54,9 @@ class Trainer:
         y = batch["y"].to(self.device).float()
 
         y_pred = self.model(x).squeeze()
-        if "y_probs" in batch: # yeast, classification
-            y_probs = batch["y_probs"].to(self.device)
-            loss = self.classification_criterion(y_pred, y_probs)
-        else: # regression
-            y = batch["y"].to(self.device)
-            loss = self.regression_criterion(y_pred, y.squeeze(-1))
+        y = batch["y"].to(self.device)
+        print(y.shape, y_pred.shape)
+        loss = self.regression_criterion(y_pred, y.squeeze(-1))
 
         loss.backward()
         self.optimizer.step()
@@ -77,9 +74,10 @@ class Trainer:
                 x = batch["x"].to(self.device)
                 y = batch["y"].to(self.device).float()
                 pred = self.model.predict(x).squeeze()
-
+                print(y.shape, pred.shape)
                 y_true.append(y.cpu().numpy())
                 y_pred.append(pred.cpu().numpy())
+            
 
         y_true = np.concatenate(y_true)
         y_pred = np.concatenate(y_pred)
