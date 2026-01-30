@@ -1,0 +1,44 @@
+#!/bin/bash
+#SBATCH --job-name=exoshorkie_train
+#SBATCH --account=def-cdeboer
+#SBATCH --time=15:00:00         
+#SBATCH --gpus=h100:1
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --array=0,1
+#SBATCH --mem=32GB
+#SBATCH --output=results/test_outputs/%A_%a.out
+#SBATCH --error=results/training_log/%A_%a.err
+#SBATCH --profile=none
+
+
+
+
+
+
+
+# Hard-coded training calls for datasets in data/exo_data
+
+# Data-storage chr (dChr)
+python train_exo.py --chrom="dChr" --npz-fwd="data/exo_data/Data-storage chr/dChr_fwd_norm.npz" --npz-rev="data/exo_data/Data-storage chr/dChr_rev_norm.npz" --fasta="data/exo_data/Data-storage chr/dChr.fa"
+
+# HPRT1
+python train_exo.py --chrom="HPRT1" --npz-fwd="data/exo_data/HPRT1/HPRT1_fwd_norm.npz" --npz-rev="data/exo_data/HPRT1/HPRT1_rev_norm.npz" --fasta="data/exo_data/HPRT1/HPRT1.fa"
+
+# HPRT1R
+python train_exo.py --chrom="HPRT1R" --npz-fwd="data/exo_data/HPRT1R/HPRT1R_fwd_norm.npz" --npz-rev="data/exo_data/HPRT1R/HPRT1R_rev_norm.npz" --fasta="data/exo_data/HPRT1R/HPRT1R.fa"
+
+# Human chr _exo7 - part 1 and part 2:w
+
+python train_exo.py --chrom="Human_part1" --npz-fwd="data/exo_data/Human chr 7/Human_part1_fwd_norm.npz" --npz-rev="data/exo_data/Human chr 7/Human_part1_rev_norm.npz" --fasta="data/exo_data/Human chr 7/chr7_part1.fa"
+python train_exo.py --chrom="Human_part2" --npz-fwd="data/exo_data/Human chr 7/Human_part2_fwd_norm.npz" --npz-rev="data/exo_data/Human chr 7/Human_part2_rev_norm.npz" --fasta="data/exo_data/Human chr 7/chr7_part2.fa"
+
+# M. mycoide_exos
+python train_exo.py --chrom="Mmmyco" --npz-fwd="data/exo_data/M. mycoides/Mmmyco_fwd_norm.npz" --npz-rev="data/exo_data/M. mycoides/Mmmyco_rev_norm.npz" --fasta="data/exo_data/M. mycoides/Mmmyco.fa"
+
+# M. pneumon_exoiae
+python train_exo.py --chrom="Mpneumo" --npz-fwd="data/exo_data/M. pneumoniae/Mpneumo_fwd_norm.npz" --npz-rev="data/exo_data/M. pneumoniae/Mpneumo_rev_norm.npz" --fasta="data/exo_data/M. pneumoniae/Mpneumo.fa"
+
+# Yeast geno_exome
+python train_exo.py --chrom="genomic" --npz-fwd="data/exo_data/Yeast genome/genomic_fwd_norm.npz" --npz-rev="data/exo_data/Yeast genome/genomic_rev_norm.npz" --fasta="data/exo_data/Yeast genome/S288C_R64.fa"

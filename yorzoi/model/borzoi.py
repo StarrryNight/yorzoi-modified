@@ -113,8 +113,12 @@ class Sorzoi(PreTrainedModel):
         return Sorzoi(BorzoiConfig(**kwargs))
 
     def __init__(self, config):
-        super(Sorzoi, self).__init__(config)
+        super(Sorzoi, self).__init__(config) 
+        self.conv_dna = ConvDna(out_channels=256, resolution=config.resolution)
+             # 1. Global Pooling to handle variable sequence lengths or condense features
+        self.global_pool = nn.AdaptiveAvgPool1d(1) 
         self._max_pool=nn.MaxPool1d(kernel_size=2, padding=0)
+
         self.res_tower = nn.Sequential(
             # EDIT: reduced number of ConvBlocks in tower as sequence length is much smaller
             ConvBlock(in_channels=256, out_channels=320, kernel_size=5),
@@ -131,9 +135,6 @@ class Sorzoi(PreTrainedModel):
                 in_channels=448, out_channels=512, kernel_size=5
             ),  # EDIT: changed in_channels
         )
-        self.conv_dna = ConvDna(out_channels=256, resolution=config.resolution)
-             # 1. Global Pooling to handle variable sequence lengths or condense features
-        self.global_pool = nn.AdaptiveAvgPool1d(1) 
         
         # 2. The Regressor Head
         self.expression_head = nn.Sequential(
