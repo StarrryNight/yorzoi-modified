@@ -7,6 +7,14 @@ from yorzoi.utils import _borzoi_transform
 import matplotlib.pyplot as plt
 from typing import List, Optional
 
+try:
+    from data_utils import Source, extract_chr_seq
+except ImportError:
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from data_utils import Source, extract_chr_seq
+
 class ExoGenomicDataset(Dataset):
     def __init__(
         self,

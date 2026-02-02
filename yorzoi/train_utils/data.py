@@ -1,8 +1,17 @@
 import pandas as pd
+import pickle
+from typing import List
 from torch.utils.data import DataLoader
 from yorzoi.config import TrainConfig
-from yorzoi.dataset import GenomicDataset, custom_collate_factory
-import pickle
+from yorzoi.dataset import GenomicDataset, ExoGenomicDataset, custom_collate_factory
+
+try:
+    from data_utils import Source
+except ImportError:
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from data_utils import Source
 
 def create_datasets(
     cfg: TrainConfig,
@@ -12,7 +21,6 @@ def create_datasets(
         for col in cfg.subset_data:
             samples = samples[samples[col].isin(cfg.subset_data[col])]
 
-    samples = pickle.load(file)
     train_samples = samples[samples["fold"] == "train"]
     val_samples = samples[samples["fold"] == "val"]
     test_samples = samples[samples["fold"] == "test"]
@@ -72,3 +80,53 @@ def create_dataloaders(
     )
 
     return train_loader, val_loader, test_loader
+
+
+def create_exo_datasets(
+    sources: List[Source],
+    cfg: TrainConfig,
+) -> tuple[ExoGenomicDataset, ExoGenomicDataset, ExoGenomicDataset]:
+    """Create train, val, and test ExoGenomicDatasets from Source objects.
+
+    Args:
+        sources: List of Source objects containing coverage and sequence data
+        cfg: TrainConfig with resolution and augmentation settings
+
+    Returns:
+        Tuple of (train_dataset, val_dataset, test_dataset)
+    """
+    train_dataset = ExoGenomicDataset(
+        sources,
+        split_name="train",
+        resolution=cfg.resolution,
+        rc_aug=cfg.augmentation.get("rc_aug", False),
+        noise_tracks=cfg.augmentation.get("noise", False),
+    )
+
+    val_dataset = ExoGenomicDataset(
+        sources,
+        split_name="val",
+        resolution=cfg.resolution,
+    )
+
+    test_dataset = ExoGenomicDataset(
+        sources,
+        split_name="test",
+        resolution=cfg.resolution,
+    )
+
+    return train_dataset, val_dataset, test_dataset
+
+
+def load_sources(path_to_sources: str) -> List[Source]:
+    """Load Source objects from a pickle file.
+
+    Args:
+        path_to_sources: Path to pickle file containing list of Source objects
+
+    Returns:
+        List of Source objects
+    """
+    with open(path_to_sources, 'rb') as f:
+        sources = pickle.load(f)
+    return sources
