@@ -5,7 +5,288 @@ import numpy as np
 from yorzoi.constants import nucleotide2onehot
 from yorzoi.utils import _borzoi_transform
 import matplotlib.pyplot as plt
+from typing import List, Optional
 
+class ExoGenomicDataset(Dataset):
+    def __init__(
+        self,
+        sources,
+        split_name: str = "train",
+        rc_aug: bool = False,
+        noise_tracks: bool = False,
+        resolution: int = 10,
+        sample_length: int = 5_000,
+        context_length: int = 1_000,
+    ):
+        """
+        Dataset for exogenous genomic data using Source dataclass.
+        
+        Args:
+            sources: List of Source objects containing coverage and sequence data
+            split_name: One of 'train', 'val', or 'test'
+            rc_aug: Whether to apply reverse complement augmentation
+            noise_tracks: Whether to add noise to coverage tracks
+            resolution: Bin size for coverage aggregation (bp)
+            sample_length: Total length of input sequence (bp)
+            context_length: Context region on each side (bp)
+        """
+        print(f"\tSetting up {split_name} ExoGenomicDataset")
+        self.split_name = split_name
+        self.resolution = resolution
+        self.sample_length = sample_length
+        self.context_length = context_length
+        self.reverse_complement_aug = rc_aug
+        self.noise_tracks = noise_tracks
+        
+        # Store sources and build sample index
+        self.sources = sources
+        self.samples = self._build_sample_index(sources, split_name)
+        
+        # Calculate normalization statistics
+        self.mean_track_values, self.std_track_values = self._calculate_normalization()
+        
+        print(f"\t\tLoaded {len(self.samples)} samples from {len(sources)} sources")
+        print("\t\tDone.")
+    
+    def _build_sample_index(self, sources: List[Source], split_name: str) -> pd.DataFrame:
+        """Build index of all samples from sources matching the split."""
+        all_samples = []
+        
+        for source in sources:
+            if source.windowsdf is None:
+                print(f"\t\tWarning: Source {source.name} has no windows, skipping")
+                continue
+            
+            # Filter windows by split
+            split_windows = source.windowsdf[source.windowsdf['fold'] == split_name].copy()
+            
+            if len(split_windows) == 0:
+                continue
+            
+            # Add source reference
+            split_windows['source'] = source
+            split_windows['source_name'] = source.name
+            split_windows['chrom'] = source.chrom
+            
+            all_samples.append(split_windows)
+        
+        if not all_samples:
+            raise ValueError(f"No samples found for split '{split_name}'")
+        
+        return pd.concat(all_samples, ignore_index=True)
+    
+    def _calculate_normalization(self) -> tuple:
+        """Calculate mean and std for track values from a sample of windows."""
+        mean_val, std_val = 0.0, 0.0
+        n_seen = 0
+        n_samples_to_use = min(100, len(self.samples))
+        
+        sample_indices = np.random.choice(len(self.samples), n_samples_to_use, replace=False)
+        
+        for idx in sample_indices:
+            sample = self.samples.iloc[idx]
+            source = sample['source']
+            start, end = int(sample['start']), int(sample['end'])
+            
+            # Extract coverage for this window
+            fwd_cov = source.cov_fwd[start:end]
+            rev_cov = source.cov_rev[start:end]
+            
+            # Stack forward and reverse
+            track_arr = np.stack([fwd_cov, rev_cov])
+            
+            # Sample subset for efficiency
+            subset = track_arr.flat[::max(1, track_arr.size // 10_000)]
+            mean_val += subset.mean()
+            std_val += subset.std()
+            n_seen += 1
+        
+        if n_seen > 0:
+            mean_val /= n_seen
+            std_val /= n_seen
+        
+        return mean_val, std_val
+    
+    def _extract_sequence(self, source: Source, start: int, end: int, strand: str) -> str:
+        """Extract sequence from source with proper padding."""
+        # Ensure we have the sequence loaded
+        if source.seq is None:
+            extract_chr_seq(source)
+        
+        # Clamp coordinates to valid range
+        seq_start = max(0, start)
+        seq_end = min(len(source.seq), end)
+        
+        # Extract sequence
+        sequence = source.seq[seq_start:seq_end]
+        
+        # Pad if necessary
+        left_pad = start - seq_start
+        right_pad = end - seq_end
+        
+        if left_pad < 0:
+            sequence = 'N' * abs(left_pad) + sequence
+        if right_pad > 0:
+            sequence = sequence + 'N' * right_pad
+        
+        # Reverse complement if on negative strand
+        if strand == '-':
+            sequence = self.reverse_complement_sequence(sequence)
+        
+        return sequence
+    
+    def _extract_coverage(self, source: Source, start: int, end: int) -> np.ndarray:
+        """Extract coverage tracks from source."""
+        # Clamp coordinates
+        seq_start = max(0, start)
+        seq_end = min(source.length, end)
+        
+        # Extract coverage
+        fwd_cov = source.cov_fwd[seq_start:seq_end]
+        rev_cov = source.cov_rev[seq_start:seq_end]
+        
+        # Pad if necessary
+        left_pad = start - seq_start
+        right_pad = end - seq_end
+        
+        if left_pad < 0:
+            fwd_cov = np.concatenate([np.zeros(abs(left_pad)), fwd_cov])
+            rev_cov = np.concatenate([np.zeros(abs(left_pad)), rev_cov])
+        if right_pad > 0:
+            fwd_cov = np.concatenate([fwd_cov, np.zeros(right_pad)])
+            rev_cov = np.concatenate([rev_cov, np.zeros(right_pad)])
+        
+        # Stack as [fwd, rev]
+        return np.stack([fwd_cov, rev_cov])
+    
+    def reverse_complement_sequence(self, sequence: str) -> str:
+        """Returns the reverse complement of a DNA sequence."""
+        complement = {"A": "T", "C": "G", "G": "C", "T": "A", "N": "N"}
+        return "".join(complement.get(base, "N") for base in reversed(sequence))
+    
+    def reverse_complement_tracks(self, track_values: torch.Tensor) -> torch.Tensor:
+        """
+        Rearranges tracks and reverses values.
+        For tracks of shape (n_tracks, pred_length), where n_tracks is even:
+        - Swaps first half with second half (0<->n/2, 1<->n/2+1, etc.)
+        - Reverses the order of values in each track
+        """
+        n_tracks = track_values.shape[0]
+        assert n_tracks % 2 == 0, f"Number of tracks must be even, got {n_tracks}"
+        
+        modified_tracks = track_values.clone()
+        half_idx = n_tracks // 2
+        
+        # Swap first half with second half
+        for i in range(half_idx):
+            modified_tracks[i], modified_tracks[i + half_idx] = (
+                modified_tracks[i + half_idx].clone(),
+                modified_tracks[i].clone(),
+            )
+        
+        # Reverse each track's values
+        for i in range(n_tracks):
+            modified_tracks[i] = modified_tracks[i].flip(0)
+        
+        return modified_tracks
+    
+    def apply_noise(self, track_values: torch.Tensor) -> torch.Tensor:
+        """
+        Applies Gaussian noise to each track value that is not -1 * resolution.
+        Noise is sampled from N(0, 0.1 * value).
+        """
+        valid_mask = track_values != -1 * self.resolution
+        noise = torch.zeros_like(track_values)
+        std_devs = 0.1 * torch.abs(track_values)
+        noise[valid_mask] = torch.normal(mean=0.0, std=std_devs[valid_mask])
+        return track_values.clone() + noise
+    
+    def __len__(self):
+        return len(self.samples)
+    
+    def __getitem__(self, idx):
+        sample = self.samples.iloc[idx]
+        source = sample['source']
+        
+        # Get window coordinates
+        start = int(sample['start'])
+        end = int(sample['end'])
+        window_length = end - start
+        
+        # Determine strand (default to '+' if not specified)
+        strand = '+'
+        
+        # Extract sequence with context
+        sequence = self._extract_sequence(source, start, end, strand)
+        
+        # Extract coverage (without context for prediction)
+        pred_start = start + self.context_length
+        pred_end = end - self.context_length
+        track_values = self._extract_coverage(source, pred_start, pred_end)
+        
+        # Calculate prediction length
+        pred_length = int((self.sample_length - 2 * self.context_length) / self.resolution)
+        
+        # Bin coverage at specified resolution
+        num_tracks = track_values.shape[0]
+        track_values = (
+            track_values
+            .reshape((num_tracks, pred_length, self.resolution))
+            .sum(axis=2)
+        )
+        track_values = torch.tensor(track_values, dtype=torch.float32)
+        
+        # Apply reverse complement augmentation if enabled
+        if self.reverse_complement_aug and np.random.random() < 0.5:
+            sequence = self.reverse_complement_sequence(sequence)
+            track_values = self.reverse_complement_tracks(track_values)
+        
+        # Apply noise augmentation if enabled
+        if self.noise_tracks:
+            track_values = self.apply_noise(track_values)
+        
+        # One-hot encode sequence
+        seq_encoded = torch.tensor(self.one_hot_encode(sequence), dtype=torch.float32)
+        
+        return (
+            seq_encoded,
+            track_values,
+            idx,
+            source.chrom,
+            strand,
+            start,
+            end,
+            pred_start,
+            pred_end,
+        )
+    
+    @staticmethod
+    def one_hot_encode(seq: str) -> np.ndarray:
+        """One-hot encode DNA sequence."""
+        nucleotide2onehot = {
+            'A': [1, 0, 0, 0],
+            'C': [0, 1, 0, 0],
+            'G': [0, 0, 1, 0],
+            'T': [0, 0, 0, 1],
+            'N': [0, 0, 0, 0],
+        }
+        return np.array([nucleotide2onehot.get(base, [0, 0, 0, 0]) for base in seq])
+    
+    def plot_track_values(self):
+        """Plot histogram of track values."""
+        all_values = []
+        for idx in range(min(100, len(self))):
+            _, track_values, *_ = self[idx]
+            all_values.append(track_values.numpy().flatten())
+        
+        all_values = np.concatenate(all_values)
+        plt.hist(all_values, bins=100, log=True)
+        plt.yscale("log")
+        plt.xlabel("Coverage value")
+        plt.ylabel("Count (log scale)")
+        plt.title(f"Track values distribution - {self.split_name}")
+        plt.savefig(f"track_values_histogram_{self.split_name}.png")
+        plt.close()
 
 class GenomicDataset(Dataset):
     def __init__(

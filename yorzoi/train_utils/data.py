@@ -2,7 +2,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from yorzoi.config import TrainConfig
 from yorzoi.dataset import GenomicDataset, custom_collate_factory
-
+import pickle
 
 def create_datasets(
     cfg: TrainConfig,
@@ -12,10 +12,10 @@ def create_datasets(
         for col in cfg.subset_data:
             samples = samples[samples[col].isin(cfg.subset_data[col])]
 
+    samples = pickle.load(file)
     train_samples = samples[samples["fold"] == "train"]
     val_samples = samples[samples["fold"] == "val"]
     test_samples = samples[samples["fold"] == "test"]
-
     train_dataset = GenomicDataset(
         train_samples,
         resolution=cfg.resolution,
