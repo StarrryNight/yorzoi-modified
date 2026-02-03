@@ -372,7 +372,7 @@ def test_model(
                 pearson_new = pearsonr(pred, actual).statistic
                 spearman_new = spearmanr(pred,actual).statistic 
                 pearson_sum += pearson_new if math.isnan(pearson_new)==False else 0 
-                spearman += spearman_new if math.isnan(spearman_new)== False else 0 
+                spearman_sum += spearman_new if math.isnan(spearman_new)== False else 0 
 
     batch_count = 1 if batch_count==0 else batch_count
     return {
