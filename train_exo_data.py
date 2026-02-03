@@ -23,7 +23,6 @@ def main():
     # Load sources and create datasets
     print("Loading sources...")
     sources = load_sources(args.sources)
-    print(f"Loaded {len(sources)} sources")
 
     print("Creating datasets...")
     train, val, test = create_exo_datasets(sources, cfg)
