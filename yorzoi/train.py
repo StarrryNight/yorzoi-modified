@@ -28,6 +28,7 @@ from yorzoi.config import BorzoiConfig, TrainConfig
 from yorzoi.train_utils.data import create_datasets, create_dataloaders
 from scipy.stats import pearsonr, spearmanr
 import math
+import wandb
 # Helper --------------------------------------------------------------------
 
 
@@ -141,6 +142,8 @@ def train_model(
     finetune_counter: int = 0  # counts epochs in fixed-order fine-tune phase
     backbone_frozen: bool = False  # ensure we freeze only once
 
+    run = wandb.init(entity="lausingsamuel", 
+    project="yorzoi")
     for epoch in range(num_epochs):
         model.train()
         total_loss = 0
@@ -203,10 +206,14 @@ def train_model(
         val_loss = 0
         val_poisson_loss = 0
         val_multinomial_loss = 0
+        pearson_sum=0
+        spearman_sum=0
+        batch_count=0
         with torch.no_grad():
             if run_config.borzoi_cfg["flashed"]:
                 with torch.amp.autocast('cuda', dtype=torch.bfloat16):
                     for i, batch in enumerate(val_loader):
+                        batch_count+=1
                         sequences, targets = batch[0], batch[1]
 
                         sequences = sequences.to(device)
@@ -225,6 +232,13 @@ def train_model(
                         val_loss += loss.item()
                         val_multinomial_loss += multinomial_term.sum().item()
                         val_poisson_loss += poisson_term.sum().item()
+
+                        pred = outputs[0, 0, :].cpu()
+                        actual = targets[0, 0, :].cpu()
+                        pearson_new = pearsonr(pred, actual).statistic
+                        spearman_new = spearmanr(pred,actual).statistic 
+                        pearson_sum += pearson_new if math.isnan(pearson_new)==False else 0 
+                        spearman_sum += spearman_new if math.isnan(spearman_new)== False else 0 
             else:
                 for i, batch in enumerate(val_loader):
                     sequences, targets = batch[0], batch[1]
@@ -245,6 +259,10 @@ def train_model(
                     val_multinomial_loss += multinomial_term.sum().item()
                     val_poisson_loss += poisson_term.sum().item()
 
+        batch_count = 1 if batch_count==0 else batch_count
+    
+        run.log({"pearson": round(float(pearson_sum/batch_count), 3),"spearman": round(float(spearman_sum/batch_count), 3)})
+    
         avg_val_loss = val_loss / len(val_loader)
         avg_val_poisson_loss = val_poisson_loss / len(val_loader)
         avg_val_multinomial_loss = val_multinomial_loss / len(val_loader)

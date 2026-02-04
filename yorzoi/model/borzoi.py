@@ -129,6 +129,46 @@ class Sorzoi(PreTrainedModel):
         )
         self.yeast_final_block = YeastFinalBlock(in_channels=512)
 
+        self.upsample = torch.nn.Upsample(scale_factor=2)
+        self.upsampling_unet1 = nn.Sequential(
+            ConvBlock(in_channels=config.dim, out_channels=config.dim, kernel_size=1),
+            self.upsample,
+        )
+        self.separable1 = nn.Sequential(
+            ConvBlock(
+                in_channels=config.separable1["separ_conv"]["in_channels"],
+                out_channels=config.separable1["separ_conv"]["out_channels"],
+                kernel_size=3,
+                conv_type="separable",
+            ),
+            nn.Conv1d(  # TS: I added this to reduce channel numbers as borzoi predicts many more channels than we initially do.
+                # TS: we might remove this once we increase the channel numbers
+                in_channels=config.separable1["separ_conv"]["out_channels"],
+                out_channels=config.separable1["conv1d"]["out_channels"],
+                kernel_size=1,
+            ),
+        )
+        self.upsampling_unet0 = nn.Sequential(
+            ConvBlock(
+                in_channels=config.upsampling_unet0["in_channels"],
+                out_channels=config.upsampling_unet0["out_channels"],
+                kernel_size=1,
+            ),
+            self.upsample,
+        )
+        self.separable0 = nn.Sequential(
+            ConvBlock(
+                in_channels=config.separable0["in_channels"],
+                out_channels=config.separable0["in_channels"],
+                kernel_size=3,
+                conv_type="separable",
+            ),
+            nn.Conv1d(
+                in_channels=config.separable0["in_channels"],
+                out_channels=config.separable0["out_channels"],
+                kernel_size=1,
+            ),  # TS: added this. Check out separable1 for details.
+        )
         self.unet1 = nn.Sequential(
             self._max_pool,
             ConvBlock(
@@ -138,10 +178,10 @@ class Sorzoi(PreTrainedModel):
         
         # 2. The Regressor Head
         self.expression_head = nn.Sequential(
-            nn.Linear(512, 256), # 512 matches your last ConvBlock out_channels
+            nn.Linear(324, 112), # 512 matches your last ConvBlock out_channels
             nn.ReLU(),
             nn.Dropout(0.1),
-            nn.Linear(256, 1),   # Output a single value (expression level)
+            nn.Linear(56, 1),   # Output a single value (expression level)
         )
     def get_embs(self, x):
         """
@@ -157,7 +197,20 @@ class Sorzoi(PreTrainedModel):
         x_unet0 = self.res_tower(x)
         x_unet1 = self.unet1(x_unet0)
         x = self.global_pool(x_unet1)
-        x = x.squeeze(-1)
+
+        x_unet1 = self.horizontal_conv1(x_unet1)
+
+        x_unet0 = self.horizontal_conv0(x_unet0)
+
+        x = self.transformer(x.permute(0, 2, 1))
+        x = x.permute(0, 2, 1)
+        x = self.upsampling_unet1(x)
+        x += x_unet1
+        x = self.separable1(x)
+        x = self.upsampling_unet0(x)
+        x_unet0 = x_unet0[:, :, : x.shape[2]]
+        x += x_unet0
+        x = self.separable0(x)
         return x
 
     def predict(self, seqs):

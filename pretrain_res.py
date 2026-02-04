@@ -11,6 +11,7 @@ from yorzoi.trainer import Trainer
 task_id = int(os.environ.get('SLURM_ARRAY_TASK_ID', 0)) 
 PATH_TO_TRAIN = "data/train.txt"
 PATH_TO_VAL = "data/val.txt"
+
 confi = TrainConfig.read_from_json("train_config.json")
 md = Sorzoi(BorzoiConfig.read_from_json(confi.borzoi_cfg))
 train_dl = prepare_dataloader(tsv_path=PATH_TO_TRAIN,
