@@ -119,6 +119,14 @@ class Sorzoi(PreTrainedModel):
         self.global_pool = nn.AdaptiveAvgPool1d(1) 
         self._max_pool=nn.MaxPool1d(kernel_size=2, padding=0)
 
+        self.horizontal_conv0, self.horizontal_conv1 = (
+            ConvBlock(
+                in_channels=config.horizontal_conv0["in_channels"],
+                out_channels=config.horizontal_conv0["out_channels"],
+                kernel_size=1,
+            ),  # EDIT: changed in_channels and out_channels
+            ConvBlock(in_channels=config.dim, out_channels=config.dim, kernel_size=1),
+        )
         self.res_tower = nn.Sequential(
             # EDIT: reduced number of ConvBlocks in tower as sequence length is much smaller
             ConvBlock(in_channels=256, out_channels=320, kernel_size=5),
@@ -202,10 +210,9 @@ class Sorzoi(PreTrainedModel):
 
         x_unet0 = self.horizontal_conv0(x_unet0)
 
-        x = self.transformer(x.permute(0, 2, 1))
-        x = x.permute(0, 2, 1)
         x = self.upsampling_unet1(x)
-        x += x_unet1
+        x += x_unet1[:, :, : x.shape[2]]
+
         x = self.separable1(x)
         x = self.upsampling_unet0(x)
         x_unet0 = x_unet0[:, :, : x.shape[2]]
