@@ -115,81 +115,27 @@ class Sorzoi(PreTrainedModel):
     def __init__(self, config):
         super(Sorzoi, self).__init__(config) 
         self.conv_dna = ConvDna(out_channels=256, resolution=config.resolution)
-             # 1. Global Pooling to handle variable sequence lengths or condense features
-        self.global_pool = nn.AdaptiveAvgPool1d(1) 
-        self._max_pool=nn.MaxPool1d(kernel_size=2, padding=0)
+        self.global_pool = nn.AdaptiveAvgPool1d(1)
 
-        self.horizontal_conv0, self.horizontal_conv1 = (
-            ConvBlock(
-                in_channels=config.horizontal_conv0["in_channels"],
-                out_channels=config.horizontal_conv0["out_channels"],
-                kernel_size=1,
-            ),  # EDIT: changed in_channels and out_channels
-            ConvBlock(in_channels=config.dim, out_channels=config.dim, kernel_size=1),
-        )
         self.res_tower = nn.Sequential(
-            # EDIT: reduced number of ConvBlocks in tower as sequence length is much smaller
             ConvBlock(in_channels=256, out_channels=320, kernel_size=5),
-            self._max_pool,
+            nn.MaxPool1d(kernel_size=2, padding=0),
             ConvBlock(in_channels=320, out_channels=384, kernel_size=5),
-            self._max_pool,
+            nn.MaxPool1d(kernel_size=2, padding=0),
             ConvBlock(in_channels=384, out_channels=448, kernel_size=5),
         )
-        self.yeast_final_block = YeastFinalBlock(in_channels=512)
-
-        self.upsample = torch.nn.Upsample(scale_factor=2)
-        self.upsampling_unet1 = nn.Sequential(
-            ConvBlock(in_channels=config.dim, out_channels=config.dim, kernel_size=1),
-            self.upsample,
-        )
-        self.separable1 = nn.Sequential(
-            ConvBlock(
-                in_channels=config.separable1["separ_conv"]["in_channels"],
-                out_channels=config.separable1["separ_conv"]["out_channels"],
-                kernel_size=3,
-                conv_type="separable",
-            ),
-            nn.Conv1d(  # TS: I added this to reduce channel numbers as borzoi predicts many more channels than we initially do.
-                # TS: we might remove this once we increase the channel numbers
-                in_channels=config.separable1["separ_conv"]["out_channels"],
-                out_channels=config.separable1["conv1d"]["out_channels"],
-                kernel_size=1,
-            ),
-        )
-        self.upsampling_unet0 = nn.Sequential(
-            ConvBlock(
-                in_channels=config.upsampling_unet0["in_channels"],
-                out_channels=config.upsampling_unet0["out_channels"],
-                kernel_size=1,
-            ),
-            self.upsample,
-        )
-        self.separable0 = nn.Sequential(
-            ConvBlock(
-                in_channels=config.separable0["in_channels"],
-                out_channels=config.separable0["in_channels"],
-                kernel_size=3,
-                conv_type="separable",
-            ),
-            nn.Conv1d(
-                in_channels=config.separable0["in_channels"],
-                out_channels=config.separable0["out_channels"],
-                kernel_size=1,
-            ),  # TS: added this. Check out separable1 for details.
-        )
         self.unet1 = nn.Sequential(
-            self._max_pool,
+            nn.MaxPool1d(kernel_size=2, padding=0),
             ConvBlock(
                 in_channels=448, out_channels=512, kernel_size=5
-            ),  # EDIT: changed in_channels
+            ),
         )
-        
-        # 2. The Regressor Head
+
         self.expression_head = nn.Sequential(
-            nn.Linear(324, 112), # 512 matches your last ConvBlock out_channels
+            nn.Linear(512, 112),
             nn.ReLU(),
             nn.Dropout(0.1),
-            nn.Linear(56, 1),   # Output a single value (expression level)
+            nn.Linear(112, 1),
         )
     def get_embs(self, x):
         """
@@ -202,22 +148,10 @@ class Sorzoi(PreTrainedModel):
             torch.Tensor: Embeddings of shape (N, 512).
         """
         x = self.conv_dna(x)
-        x_unet0 = self.res_tower(x)
-        x_unet1 = self.unet1(x_unet0)
-        x = self.global_pool(x_unet1)
-
-        x_unet1 = self.horizontal_conv1(x_unet1)
-
-        x_unet0 = self.horizontal_conv0(x_unet0)
-
-        x = self.upsampling_unet1(x)
-        x += x_unet1[:, :, : x.shape[2]]
-
-        x = self.separable1(x)
-        x = self.upsampling_unet0(x)
-        x_unet0 = x_unet0[:, :, : x.shape[2]]
-        x += x_unet0
-        x = self.separable0(x)
+        x = self.res_tower(x)
+        x = self.unet1(x)
+        x = self.global_pool(x)  # (N, 512, 1)
+        x = x.squeeze(-1)        # (N, 512)
         return x
 
     def predict(self, seqs):
