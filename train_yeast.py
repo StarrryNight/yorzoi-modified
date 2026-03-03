@@ -33,11 +33,8 @@ md = Borzoi(BorzoiConfig.read_from_json(confi.borzoi_cfg))
 
 pretrained_sd = torch.load(PRETRAIN_PATH)
 partial_weights = {k: v for k, v in pretrained_sd.items() 
-               if 'res_tower' in k}
+               if 'res_tower' in k or 'conv_dna' in k}
 md.load_state_dict(partial_weights, strict=False)
-for name, param in md.named_parameters():
-    if name in pretrained_sd:
-        param.requires_grad=False
         
 
 train_model(

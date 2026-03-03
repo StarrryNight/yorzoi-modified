@@ -24,10 +24,6 @@ def test(model_path: str,
     md = Borzoi(BorzoiConfig.read_from_json(confi.borzoi_cfg))
     model_sd = torch.load(model_path)
     md.load_state_dict(model_sd)
-    pretrained_sd = torch.load(pretrained_path)
-    partial_weights = {k: v for k, v in pretrained_sd.items() 
-                   if 'res_tower' in k}
-    md.load_state_dict(partial_weights, strict=False)
     md = md.to("cuda:0")
     md.eval()
 
@@ -55,6 +51,9 @@ def test(model_path: str,
         file.write(f"spearman r: {spearmanr}")
         file.write("\n")
         file.write("\n")
+        print(f"pearson r: {pearsonr}")
+        print(f"spearman r: {spearmanr}")
+
 
 
 test(model_path="trained_model/model_best.pth", test_path="data/samples.pkl", result_path="results/Sorzoi/analysis.txt", pretrained_path="trained_model/Sorzoi/model_best.pth")

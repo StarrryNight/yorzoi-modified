@@ -1,7 +1,7 @@
 {
   "seed": 42,
   "batch_size": 30,
-  "num_epochs": 250,
+  "num_epochs": 150,
   "patience": 50,
   "finetune_epochs": 40,
   "randomize_track_order": true,

@@ -121,8 +121,12 @@ def train_model(
     randomize_track_order: bool = False,
     freeze_backbone: bool = True,
     finetune_lr_factor: float = 0.1,
-    run_config=None,
+    run_config=None,  # TODO: refactor such that config is only passed once
 ):
+    num_epochs = run_config.num_epochs
+    patience = run_config.patience
+    finetune_epochs = run_config.finetune_epochs
+    randomize_track_order = run_config.randomize_track_order
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.00006,weight_decay=0.0000001)
     scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2)
     model.to(device)
